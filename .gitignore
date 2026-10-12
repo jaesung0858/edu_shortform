@@ -1,0 +1,32 @@
+# React
+node_modules/
+dist/
+
+# Spring Boot
+.gradle/
+build/
+target/
+out/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Local Spring configuration
+application-local.yml
+application-local.properties
+
+# Uploaded videos
+uploads/
+*.mp4
+
+# OS
+.DS_Store
+Thumbs.db

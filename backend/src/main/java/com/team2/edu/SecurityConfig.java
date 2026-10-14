@@ -2,7 +2,6 @@ package com.team2.edu;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -13,7 +12,7 @@ class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-        ).formLogin(Customizer.withDefaults());
+        ).formLogin(form -> form.defaultSuccessUrl("/api/admin/me"));
 
         return http.build();
     }

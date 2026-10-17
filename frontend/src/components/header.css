@@ -1,0 +1,32 @@
+.site-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 70px;
+  width: 100%;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+
+.site-header .logo {
+  height: 70px;
+  flex-shrink: 0;
+}
+
+.site-header .searchInput {
+  display: flex;
+  flex: 1;
+  min-width: 180px;
+}
+
+.site-header .searchInput input {
+  flex: 1;
+  min-width: 0;
+}
+
+.site-header .headId,
+.site-header .logout {
+  white-space: nowrap;
+}

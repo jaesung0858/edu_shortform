@@ -79,6 +79,9 @@ export default function LearningPage({ videoId }) {
   return (
     <div className="lp-page">
       <header className="lp-header">
+        <Link className="lp-btn lp-btn--ghost" to="/home">
+          홈
+        </Link>
         <span className="lp-header__title">오늘의 학습</span>
         <Link className="lp-btn lp-btn--ghost" to="/learn/summary">
           학습 종료

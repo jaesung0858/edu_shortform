@@ -1,0 +1,24 @@
+.site-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  padding: 20px;
+}
+
+.site-sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  .site-sidebar {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .site-sidebar nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+}

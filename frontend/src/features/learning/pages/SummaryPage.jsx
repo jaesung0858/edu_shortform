@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getNextVideoId } from '../api/learningApi'
 import { resetSession, summarizeSession } from '../store/learningSession'
 import '../learning.css'
@@ -18,6 +18,9 @@ export default function SummaryPage() {
   return (
     <div className="lp-page">
       <header className="lp-header">
+        <Link className="lp-btn lp-btn--ghost" to="/home">
+          홈
+        </Link>
         <span className="lp-header__title">학습 결과</span>
       </header>
 

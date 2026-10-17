@@ -1,16 +1,44 @@
-# React + Vite
+# 교육용 숏폼 프론트엔드
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React와 Vite로 구현한 홈·탐색·회원 메뉴 및 학습 화면입니다.
 
-Currently, two official plugins are available:
+## 실행
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```powershell
+npm ci
+npm run dev
+```
 
-## React Compiler
+터미널의 Local 주소를 브라우저에서 엽니다.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## 화면 경로
 
-## Expanding the Oxlint configuration
+| 경로 | 화면 |
+| --- | --- |
+| `/` | `/home`으로 이동 |
+| `/home` | 홈 영상 목록과 카테고리 필터 |
+| `/explore` | 탐색 영상 목록 |
+| `/myChannel` | 내 채널 화면 자리 |
+| `/myPage` | 마이페이지 화면 자리 |
+| `/learn/1` | 첫 영상 학습 |
+| `/learn/:videoId` | 영상·퀴즈·채점 결과·추천 |
+| `/learn/summary` | 이번 탭의 학습 요약 |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+홈의 사이드바에서 학습 화면으로 이동할 수 있습니다. 학습 화면은 세로형 플레이어의 전체 화면 구성을 유지하며 홈으로 돌아갈 수 있습니다.
+
+## 백엔드 연결 상태
+
+- 홈·탐색의 목록과 헤더의 회원 이름은 샘플 데이터입니다. 검색·로그아웃은 아직 실제 기능과 연결되지 않았습니다.
+- 학습 화면은 기본적으로 목업으로 동작합니다. `.env.example`을 참고해 개인 설정을 작성합니다.
+- `VITE_USE_MOCK=false`이면 실제 학습 API를 호출합니다. 단, 영상 상세 API `GET /api/videos/{videoId}`는 아직 백엔드에 없어 추가 연결 작업이 필요합니다.
+- 개발 서버의 `/api` 요청은 `http://localhost:8080`으로 전달합니다. Axios의 세션 쿠키 옵션과 임시 `X-User-Id` 헤더를 유지했습니다.
+- 학습 요약은 브라우저 `sessionStorage`를 사용하며 서버 로그인 세션 및 DB 시청 기록과 별개입니다.
+
+## 확인 명령
+
+```powershell
+npm run lint
+npm run build
+```
+
+양쪽 브랜치의 검사 설정을 유지해 ESLint와 Oxlint를 함께 실행합니다.

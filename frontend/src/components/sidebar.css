@@ -1,0 +1,11 @@
+.sidebar {
+    display: flex;
+    flex-direction:column;
+    width: 25%;
+    border-color: aqua;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}

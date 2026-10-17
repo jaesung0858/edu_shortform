@@ -1,0 +1,28 @@
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width:100%;
+}
+
+.logo {
+    height: 70px;
+    flex-shrink: 0;
+    align-items:center;
+    
+    
+    
+}
+
+.searchInput {
+    width: 60%;
+
+}
+
+.headId{
+    width:10%;
+}
+
+.logout{
+    width:5%;
+}

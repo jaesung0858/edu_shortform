@@ -1,0 +1,22 @@
+.category {
+    display:flex;
+    gap: 20px;
+    align-items:center;
+}
+
+.video-zone {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+
+.video {
+    width: 100%;
+    min-width: 0;
+}
+
+.video img {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+}

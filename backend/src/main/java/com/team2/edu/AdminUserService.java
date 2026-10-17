@@ -15,6 +15,7 @@ public class AdminUserService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
+    // 삭제되지 않은 회원을 이메일이나 닉네임으로 검색한다.
     public List<AdminUserResponse> findAll(String keyword) {
         String sql = """
                 SELECT user_id, email, nickname, role, created_at

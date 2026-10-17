@@ -42,6 +42,12 @@ public class User extends BaseTimeEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
+    // 신규 회원 정보와 비밀번호 해시로 회원 객체를 생성한다.
+    public User(String email, String encodedPassword, String nickname) {
+        this.email = email;
+        this.password = encodedPassword;
+        this.nickname = nickname;
+    }
     public boolean isDeleted() {
         return deletedAt != null;
     }

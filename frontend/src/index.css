@@ -1,0 +1,11 @@
+/* 공통 스타일은 다른 팀원 담당. 여기엔 최소한의 리셋만 둔다. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+}

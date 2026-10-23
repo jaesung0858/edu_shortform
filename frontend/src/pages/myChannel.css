@@ -1,0 +1,131 @@
+.upload-page {
+    max-width: 760px;
+    padding: 32px 24px;
+}
+
+.channel-videos {
+    padding: 24px;
+}
+
+.upload-page > p {
+    margin: 12px 0 20px;
+    line-height: 1.6;
+}
+
+.upload-page fieldset {
+    display: grid;
+    gap: 10px;
+    padding: 0;
+    border: 0;
+    margin: 24px 0 16px;
+}
+
+.upload-page label {
+    color: var(--text-h);
+    margin-top: 8px;
+    font-size: 16px;
+}
+
+.upload-page input,
+.upload-page textarea,
+.upload-page select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text-h);
+    font: inherit;
+    font-size: 16px;
+}
+
+.upload-page textarea {
+    resize: vertical;
+}
+
+.upload-page button {
+    justify-self: start;
+    padding: 12px 24px;
+    margin-top: 12px;
+    border: 0;
+    border-radius: 6px;
+    background: #5365c8;
+    color: #fff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.upload-page :focus-visible {
+    outline: 3px solid #7581e7;
+    outline-offset: 2px;
+}
+
+.upload-page button:disabled,
+.login-button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+
+.upload-page .upload-error,
+.session-error {
+    color: #c23535;
+}
+
+.upload-page .upload-success {
+    color: #21733b;
+}
+
+.session-error {
+    padding: 8px 24px;
+}
+
+.classification-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.classification-row select,
+.classification-row input {
+    flex: 1;
+    min-width: 0;
+}
+
+.classification-row button {
+    margin: 0;
+    padding: 10px 14px;
+    white-space: nowrap;
+    font-size: 15px;
+}
+
+.classification-create {
+    display: grid;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.video-duration {
+    font-size: 15px;
+    line-height: 1.6;
+}
+
+@media (max-width: 480px) {
+    .classification-row {
+        flex-wrap: wrap;
+    }
+
+    .classification-row input {
+        flex-basis: 100%;
+    }
+}
+
+@media (prefers-color-scheme: dark) {
+    .upload-page .upload-error,
+    .session-error {
+        color: #ff9696;
+    }
+
+    .upload-page .upload-success {
+        color: #77d69a;
+    }
+}

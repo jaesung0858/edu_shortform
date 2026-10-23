@@ -17,7 +17,7 @@ public class LoginUserDetailsService implements UserDetailsService {
         this.userRepository = userRepository;
     }
 
-    // 삭제되지 않은 회원의 로그인 정보와 권한을 조회한다.
+    // 삭제된 회원을 제외하고 로그인 정보 조회
     @Override
     @Transactional(readOnly = true)
     public UserDetails loadUserByUsername(String email) {

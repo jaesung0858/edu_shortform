@@ -1,0 +1,14 @@
+.video-list .video {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+.video-list .video:focus-visible {
+  outline: 3px solid #7581e7;
+  outline-offset: 3px;
+}
+
+.video-list .video:hover h3 {
+  text-decoration: underline;
+}

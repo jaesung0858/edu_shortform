@@ -6,6 +6,7 @@ import Home from './pages/home'
 import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
+import VideoWatch from './pages/videoWatch'
 import './App.css'
 
 export default function App() {
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/explore" element={<Explore />} />
         <Route path="/myChannel" element={<MyChannel />} />
         <Route path="/myPage" element={<MyPage />} />
+        <Route path="/videos/:videoId" element={<VideoWatch />} />
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />
       <Route path="/learn/:videoId" element={<LearningRoute />} />

@@ -5,11 +5,11 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage'
 
 export default function LoginFeature({ view = 'login' }) {
   const navigate = useNavigate()
-  const onNavigate = (nextView) => navigate({
+  const onNavigate = (nextView, options) => navigate({
     login: '/login',
     signup: '/signup',
     forgot: '/forgot-password',
-  }[nextView])
+  }[nextView], options)
 
   if (view === 'signup') return <SignupPage onNavigate={onNavigate} />
   if (view === 'forgot') return <ForgotPasswordPage onNavigate={onNavigate} />

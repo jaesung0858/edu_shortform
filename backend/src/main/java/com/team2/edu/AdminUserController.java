@@ -16,7 +16,7 @@ public class AdminUserController {
         this.adminUserService = adminUserService;
     }
 
-    // 관리자 회원 목록 조회와 검색 요청을 처리한다.
+    // 회원 목록 조회·검색
     @GetMapping
     public List<AdminUserResponse> getUsers(
             @RequestParam(name = "keyword", defaultValue = "") String keyword) {

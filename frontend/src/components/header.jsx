@@ -3,9 +3,8 @@ import {Link} from "react-router-dom"
 import {useState} from "react"
 import logo from '../assets/logo.png'
 
-function Header(){
+function Header({user, loading, onLogout, loggingOut}){
     const [search, setSearch]= useState("");
-    const id="홍길동";
     return(
 
         <header className="site-header">
@@ -14,8 +13,12 @@ function Header(){
             <input type="text" placeholder='검색어를 입력하세요' value={search} onChange={(e) => setSearch(e.target.value)}/>
             <button onClick={()=> console.log(search)}>검색</button>
             </div>
-            <div className='headId'> {id}님 반갑습니다</div>
-            <button className='logout'onClick={()=>console.log("logout")}>로그아웃</button>
+            {loading ? <span>회원 정보 확인 중…</span> : user ? <>
+                <div className='headId'>{user.nickname}님 반갑습니다</div>
+                <button className='logout' onClick={onLogout} disabled={loggingOut}>
+                    {loggingOut ? '로그아웃 중…' : '로그아웃'}
+                </button>
+            </> : <Link to='/login'>로그인</Link>}
         </header>
     )
 }

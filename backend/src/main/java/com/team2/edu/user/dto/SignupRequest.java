@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-// 회원가입 입력값과 검증 조건을 정의한다.
+// 회원가입 입력값
 public record SignupRequest(
         @NotBlank
         @Email

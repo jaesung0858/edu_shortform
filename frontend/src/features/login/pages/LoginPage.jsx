@@ -1,13 +1,31 @@
 import { useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { login } from '../../../api/auth'
 import AuthLayout from '../components/AuthLayout'
 import TextField from '../components/TextField'
 
 export default function LoginPage({ onNavigate }) {
-  const [message, setMessage] = useState('')
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [message, setMessage] = useState(location.state?.signupComplete ? '회원가입이 완료되었습니다. 로그인해주세요.' : '')
+  const [pending, setPending] = useState(false)
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    setMessage('로그인 API가 아직 연결되지 않았어요.')
+    if (pending) return
+    const form = new FormData(event.currentTarget)
+    setPending(true)
+    setMessage('')
+    try {
+      await login(form.get('email').trim(), form.get('password'))
+      navigate('/home', { replace: true })
+    } catch (error) {
+      setMessage(error.response?.status === 401
+        ? '이메일 또는 비밀번호를 확인해주세요.'
+        : '로그인하지 못했습니다. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -30,6 +48,7 @@ export default function LoginPage({ onNavigate }) {
           type="email"
           placeholder="이메일 주소를 입력하세요"
           autoComplete="email"
+          maxLength={100}
         />
         <TextField
           id="password"
@@ -40,16 +59,12 @@ export default function LoginPage({ onNavigate }) {
         />
 
         <div className="login-options">
-          <label className="remember-option" htmlFor="remember">
-            <input id="remember" name="remember" type="checkbox" />
-            <span>로그인 상태 유지</span>
-          </label>
           <button className="text-button" type="button" onClick={() => onNavigate('forgot')}>
             비밀번호 찾기
           </button>
         </div>
 
-        <button className="login-button" type="submit">로그인</button>
+        <button className="login-button" type="submit" disabled={pending}>{pending ? '로그인 중…' : '로그인'}</button>
         <p className="login-message" role="status" aria-live="polite">{message}</p>
       </form>
     </AuthLayout>

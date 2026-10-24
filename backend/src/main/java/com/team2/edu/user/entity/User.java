@@ -38,7 +38,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 10)
     private Role role = Role.USER;
 
-    /** NULL이면 일반 회원, 값이 있으면 삭제된 회원 (논리 삭제) */
+    // 회원 삭제 시각. 미삭제 회원은 null
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

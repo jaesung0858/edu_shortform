@@ -1,7 +1,5 @@
--- 교육용 숏폼 플랫폼: MySQL 8.0.16 이상용 초기 스키마
--- 기준: 2조 DB 명세서 및 이후 개발 범위 조정
--- 변경: 회원 삭제 표시(users.deleted_at) 추가, 1·3·7일 복습 예약 컬럼 제외
--- 신규 DB 초기화용이며 기존 테이블의 구조를 변경하는 스크립트가 아니다.
+-- 교육용 숏폼 DB 초기 생성용 (MySQL 8.0.16 이상)
+-- 기존 테이블 변경용이 아니다. 명세서와의 차이는 README.md 참고.
 
 CREATE DATABASE IF NOT EXISTS edu_shortform
     CHARACTER SET utf8mb4
@@ -16,7 +14,7 @@ CREATE TABLE users (
     nickname VARCHAR(30) NOT NULL,
     role VARCHAR(10) NOT NULL DEFAULT 'USER' COMMENT 'USER: 시청·영상 등록, ADMIN: 관리자',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted_at DATETIME NULL DEFAULT NULL COMMENT 'NULL: 일반 회원, 값 있음: 삭제된 회원',
+    deleted_at DATETIME NULL DEFAULT NULL COMMENT '회원 삭제 시각. 미삭제 회원은 NULL',
     PRIMARY KEY (user_id),
     CONSTRAINT uq_users_email UNIQUE (email),
     CONSTRAINT uq_users_nickname UNIQUE (nickname),
@@ -47,7 +45,7 @@ CREATE TABLE video (
     tag_id INT NOT NULL COMMENT '영상당 개념 태그 1개',
     title VARCHAR(100) NOT NULL,
     description VARCHAR(1000) NULL DEFAULT NULL,
-    video_key VARCHAR(255) NOT NULL COMMENT '외부 저장소의 영상 파일 경로 또는 식별자',
+    video_key VARCHAR(255) NOT NULL COMMENT '영상 저장 파일명 또는 저장소 식별자',
     thumbnail_key VARCHAR(255) NULL DEFAULT NULL,
     duration_sec INT NOT NULL,
     view_count INT NOT NULL DEFAULT 0,

@@ -2,15 +2,15 @@
 
 Spring 공식 [Uploading Files](https://spring.io/guides/gs/uploading-files/)와
 [Multipart 요청 처리](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/multipart-forms.html)를 참고했습니다.
-`MultipartFile`로 받은 파일을 `Files.copy`로 저장하고, 기존 `video` 테이블에 영상 정보를 등록합니다.
+`MultipartFile`로 받은 파일을 `Files.copy`로 저장하고, `video` 테이블에 영상 정보를 등록합니다.
 
 ## 요청
 
 - `POST /api/videos`
 - `Content-Type: multipart/form-data`
-- 기존 세션 로그인 필요. 업로더 번호는 로그인한 회원에서 가져옵니다.
+- 세션 로그인 필요. 업로더는 로그인한 회원입니다.
 - `file` 부분에 영상 파일을, `request` 부분에 아래 영상 정보 JSON을 넣습니다.
-- `request` 부분의 Content-Type은 `application/json`입니다. Swagger에 이 형식을 설정해 두었습니다.
+- `request` 부분의 Content-Type은 `application/json`입니다.
 
 | 항목 | 필수 | 내용 |
 | --- | --- | --- |
@@ -43,7 +43,7 @@ MP4 확장자와 파일 앞부분의 `ftyp` 헤더를 확인하며, 전체 파�
 [영상 구간 이동 완료 이벤트](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/seeked_event) 후
 [Canvas 이미지 변환](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)으로 생성합니다.
 서버는 이미지 형식·크기·해상도를 검사하고 JPEG로 다시 저장한 파일명을 `thumbnail_key`에 기록합니다.
-기존 API와의 호환을 위해 썸네일 없이 업로드해도 등록할 수 있습니다.
+썸네일은 선택 항목입니다.
 
 ## 응답
 
@@ -105,9 +105,8 @@ videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드
 기본값은 서버 실행 폴더의 `uploads/`입니다. `backend`에서 서버를 실행하면 `backend/uploads/`에 저장됩니다.
 환경변수 `VIDEO_STORAGE_LOCATION`으로 경로를 변경할 수 있습니다.
 
-파일명은 UUID로 새로 생성합니다. 서버를 다시 시작해도 파일을 유지하며, DB 트랜잭션이 롤백되면 저장한 파일을 삭제합니다.
-파일 정리에 실패한 경우에는 서버 로그에 파일명을 남깁니다. `uploads/`는 기존 Git 제외 설정에 포함돼 있습니다.
-영상은 `.mp4`, 썸네일은 `.jpg`로 저장합니다. DB 등록이 롤백되면 두 파일을 모두 정리합니다.
+UUID 파일명으로 영상은 `.mp4`, 썸네일은 `.jpg`로 저장합니다. 서버를 다시 시작해도 파일은 유지됩니다.
+DB 등록이 롤백되면 두 파일을 삭제하고, 삭제 실패 시 서버 로그를 남깁니다. `uploads/`는 Git에서 제외합니다.
 기존에 등록된 영상의 썸네일은 자동으로 생성하지 않으며, 썸네일이 없으면 목록에 기본 이미지를 표시합니다.
 
 ## 확인 방법
@@ -144,4 +143,4 @@ FROM video
 ORDER BY video_id DESC;
 ```
 
-AI 활용: 공식 문서를 참고한 업로드 코드 작성, 회원가입·로그인·업로드 화면의 API 연결과 오류 수정, 테스트 작성에 Codex를 활용했습니다.
+AI 활용: 업로드 구현, API 연동 및 테스트 작성에 Codex를 사용했습니다.

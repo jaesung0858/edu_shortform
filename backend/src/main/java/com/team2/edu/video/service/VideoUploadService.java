@@ -120,7 +120,7 @@ public class VideoUploadService {
     }
 
     private void deleteOnRollback(String key) {
-        // DB 롤백 시 파일도 삭제 (커밋 중 실패한 경우 포함)
+        // DB 롤백 시 저장한 파일 삭제
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {

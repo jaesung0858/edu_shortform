@@ -23,6 +23,7 @@ npm run dev
 | `/forgot-password` | 비밀번호 찾기 화면 |
 | `/myChannel` | 내 채널 화면 자리 |
 | `/myPage` | 마이페이지 화면 자리 |
+| `/channel/upload` | 영상 등록 (파일 미리보기·영상 정보·확인 퀴즈) |
 | `/learn/1` | 첫 영상 학습 |
 | `/learn/:videoId` | 영상·퀴즈·채점 결과·추천 |
 | `/learn/summary` | 이번 탭의 학습 요약 |
@@ -36,6 +37,7 @@ npm run dev
 - 학습 화면은 기본적으로 목업으로 동작합니다. `.env.example`을 참고해 개인 설정을 작성합니다.
 - `VITE_USE_MOCK=false`이면 실제 학습 API를 호출합니다. 단, 영상 상세 API `GET /api/videos/{videoId}`는 아직 백엔드에 없어 추가 연결 작업이 필요합니다.
 - 개발 서버의 `/api` 요청은 `http://localhost:8080`으로 전달합니다. Axios의 세션 쿠키 옵션과 임시 `X-User-Id` 헤더를 유지했습니다.
+- 영상 등록 화면은 `VITE_USE_MOCK`을 따라 목업으로 동작합니다. API 호출은 `src/features/videoUpload/api/videoUploadApi.js` 한 파일에 모았고, 실제 모드는 PR #7의 `GET /api/video-categories`, `POST /api/videos`(multipart) 계약에 맞췄습니다.
 - 학습 요약은 브라우저 `sessionStorage`를 사용하며 서버 로그인 세션 및 DB 시청 기록과 별개입니다.
 
 ## 확인 명령

@@ -11,6 +11,9 @@ import com.team2.edu.video.repository.ConceptTagRepository;
 import com.team2.edu.video.repository.VideoRepository;
 import jakarta.persistence.EntityManager;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.charset.StandardCharsets;
@@ -52,6 +55,7 @@ class VideoUploadIntegrationTests {
     @Autowired WebApplicationContext webContext;
 
     private Path uploadedFile;
+    private Path uploadedThumbnail;
     private Long uploadedId;
     private final String email = "upload-" + UUID.randomUUID() + "@example.com";
 
@@ -77,13 +81,17 @@ class VideoUploadIntegrationTests {
                 .andExpect(jsonPath("$[*].tags[*].tagId").value(hasItem(tag.getId())));
         byte[] bytes = {0, 0, 0, 12, 'f', 't', 'y', 'p', 'i', 's', 'o', 'm'};
         var file = new MockMultipartFile("file", "lesson.mp4", "video/mp4", bytes);
+        var image = new BufferedImage(4, 6, BufferedImage.TYPE_INT_RGB);
+        var imageBytes = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", imageBytes);
+        var thumbnail = new MockMultipartFile("thumbnail", "frame.jpg", "image/jpeg", imageBytes.toByteArray());
 
         String json = """
                 {"title":"업로드 테스트","description":"테스트용","categoryId":%d,"tagId":%d,"durationSec":60}
                 """.formatted(category.getId(), tag.getId());
         var metadata = new MockMultipartFile("request", "", "application/json", json.getBytes(StandardCharsets.UTF_8));
         var result = MockMvcBuilders.webAppContextSetup(webContext).build()
-                .perform(multipart("/api/videos").file(file).file(metadata)
+                .perform(multipart("/api/videos").file(file).file(metadata).file(thumbnail)
                         .principal(UsernamePasswordAuthenticationToken.authenticated(email, null, List.of())))
                 .andExpect(status().isCreated()).andReturn();
         String response = result.getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -96,17 +104,23 @@ class VideoUploadIntegrationTests {
         assertEquals("업로드 테스트", saved.getTitle());
         assertNotNull(saved.getCreatedAt());
         assertNotNull(saved.getUpdatedAt());
+        uploadedThumbnail = UPLOAD_DIRECTORY.resolve(saved.getThumbnailKey());
+        assertTrue(Files.isRegularFile(uploadedThumbnail));
         MockMvcBuilders.webAppContextSetup(webContext).build()
                 .perform(get("/api/videos").param("categoryId", category.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.videos[0].videoId").value(uploadedId.intValue()))
                 .andExpect(jsonPath("$.videos[0].title").value("업로드 테스트"))
                 .andExpect(jsonPath("$.videos[0].creatorNickname").value(creator.getNickname()))
+                .andExpect(jsonPath("$.videos[0].thumbnailUrl").value("/api/videos/" + uploadedId + "/thumbnail"))
                 .andExpect(jsonPath("$.hasNext").value(false));
         var mvc = MockMvcBuilders.webAppContextSetup(webContext).build();
         mvc.perform(get("/api/videos/" + uploadedId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.videoUrl").value("/api/videos/" + uploadedId + "/content"));
+        mvc.perform(get("/api/videos/" + uploadedId + "/thumbnail"))
+                .andExpect(status().isOk()).andExpect(content().contentType("image/jpeg"))
+                .andExpect(content().bytes(Files.readAllBytes(uploadedThumbnail)));
         mvc.perform(get("/api/videos/" + uploadedId + "/content"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("video/mp4"))
@@ -121,6 +135,11 @@ class VideoUploadIntegrationTests {
         videos.saveAndFlush(saved);
         mvc.perform(get("/api/videos/" + uploadedId + "/content"))
                 .andExpect(status().isNotFound());
+        mvc.perform(get("/api/videos/" + uploadedId + "/thumbnail"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/videos/" + uploadedId + "/thumbnail")
+                        .principal(UsernamePasswordAuthenticationToken.authenticated(email, null, List.of())))
+                .andExpect(status().isOk());
         mvc.perform(get("/api/videos/" + uploadedId + "/content")
                         .principal(UsernamePasswordAuthenticationToken.authenticated(email, null, List.of())))
                 .andExpect(status().isOk()).andExpect(content().bytes(bytes));
@@ -132,6 +151,7 @@ class VideoUploadIntegrationTests {
                 .perform(get("/v3/api-docs"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.paths['/api/videos'].post.requestBody.content['multipart/form-data'].schema.properties.file.format").value("binary"))
+                .andExpect(jsonPath("$.paths['/api/videos'].post.requestBody.content['multipart/form-data'].schema.properties.thumbnail.format").value("binary"))
                 .andExpect(jsonPath("$.paths['/api/videos'].post.requestBody.content['multipart/form-data'].schema.properties.request['$ref']").value("#/components/schemas/VideoUploadRequest"))
                 .andExpect(jsonPath("$.paths['/api/videos'].post.requestBody.content['multipart/form-data'].encoding.request.contentType").value("application/json"))
                 .andExpect(jsonPath("$.paths['/api/videos'].post.responses['400'].content").doesNotExist())
@@ -142,6 +162,7 @@ class VideoUploadIntegrationTests {
     void rolledBackTestLeavesNoVideoOrMember() {
         if (uploadedFile != null) {
             assertFalse(Files.exists(uploadedFile));
+            assertFalse(Files.exists(uploadedThumbnail));
             assertFalse(videos.existsById(uploadedId));
         }
         assertTrue(users.findByEmail(email).isEmpty());

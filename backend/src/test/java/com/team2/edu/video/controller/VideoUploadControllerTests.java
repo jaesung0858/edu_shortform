@@ -31,7 +31,7 @@ class VideoUploadControllerTests {
 
     @Test
     void acceptsMultipartFormAndReturnsCreatedVideo() throws Exception {
-        when(service.upload(eq("learner@example.com"), any(), any()))
+        when(service.upload(eq("learner@example.com"), any(), any(), isNull()))
                 .thenReturn(new VideoUploadResponse(10L, "SQL JOIN", "saved.mp4"));
         mvc.perform(request("SQL JOIN", "60")
                         .principal(UsernamePasswordAuthenticationToken.authenticated("learner@example.com", null, List.of())))
@@ -39,7 +39,7 @@ class VideoUploadControllerTests {
                 .andExpect(jsonPath("$.videoId").value(10))
                 .andExpect(jsonPath("$.videoKey").value("saved.mp4"));
         verify(service).upload(eq("learner@example.com"), any(),
-                eq(new VideoUploadRequest("SQL JOIN", null, 1, 1, 60)));
+                eq(new VideoUploadRequest("SQL JOIN", null, 1, 1, 60)), isNull());
     }
 
     @Test

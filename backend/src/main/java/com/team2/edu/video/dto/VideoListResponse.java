@@ -7,7 +7,8 @@ public record VideoListResponse(List<Item> videos, List<CategoryOption> categori
 
     public record Item(Long videoId, String title, String creatorNickname,
                        Integer categoryId, String categoryName, String tagName,
-                       int viewCount, int likeCount, int durationSec, LocalDateTime createdAt, String status) {
+                       int viewCount, int likeCount, int durationSec, LocalDateTime createdAt, String status,
+                       String thumbnailUrl) {
     }
 
     public record CategoryOption(Integer categoryId, String name) {

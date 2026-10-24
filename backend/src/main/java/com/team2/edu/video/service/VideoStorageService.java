@@ -3,11 +3,13 @@ package com.team2.edu.video.service;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.awt.image.BufferedImage;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.LinkOption;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
+import javax.imageio.ImageIO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.core.io.Resource;
@@ -74,7 +76,61 @@ public class VideoStorageService {
         }
     }
 
-    // 저장 폴더 안의 영상 파일 조회
+    // JPEG 썸네일 확인 후 저장
+    public String storeThumbnail(MultipartFile file) {
+        if (file.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "썸네일이 비어 있습니다.");
+        }
+        if (file.getSize() > 1024 * 1024) {
+            throw new ResponseStatusException(HttpStatus.CONTENT_TOO_LARGE, "썸네일은 1MB 이하여야 합니다.");
+        }
+        BufferedImage image;
+        try (var input = ImageIO.createImageInputStream(file.getInputStream())) {
+            var readers = ImageIO.getImageReaders(input);
+            if (!readers.hasNext()) {
+                throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "JPEG 썸네일을 확인해주세요.");
+            }
+            var reader = readers.next();
+            try {
+                reader.setInput(input);
+                int width = reader.getWidth(0);
+                int height = reader.getHeight(0);
+                if (!"JPEG".equalsIgnoreCase(reader.getFormatName())
+                        || width < 1 || height < 1 || width > 1920 || height > 1920) {
+                    throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "1920픽셀 이하의 JPEG 썸네일만 사용할 수 있습니다.");
+                }
+                image = reader.read(0);
+            } finally {
+                reader.dispose();
+            }
+        } catch (IOException e) {
+            throw new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "JPEG 썸네일을 읽지 못했습니다.", e);
+        }
+
+        String key = UUID.randomUUID() + ".jpg";
+        Path destination = rootLocation.resolve(key);
+        boolean created = false;
+        try {
+            Files.createDirectories(rootLocation);
+            Files.createFile(destination);
+            created = true;
+            if (!ImageIO.write(image, "jpg", destination.toFile())) {
+                throw new IOException("JPEG writer unavailable");
+            }
+            return key;
+        } catch (IOException e) {
+            if (created) {
+                try {
+                    Files.deleteIfExists(destination);
+                } catch (IOException cleanupError) {
+                    e.addSuppressed(cleanupError);
+                }
+            }
+            throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "썸네일을 저장하지 못했습니다.", e);
+        }
+    }
+
+    // 저장 폴더 안의 파일 조회
     public Resource load(String videoKey) {
         Path file = rootLocation.resolve(videoKey).normalize();
         if (!rootLocation.equals(file.getParent())

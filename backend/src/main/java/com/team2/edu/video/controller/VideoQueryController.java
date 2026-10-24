@@ -52,4 +52,11 @@ public class VideoQueryController {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore())
                 .contentType(MediaType.parseMediaType("video/mp4")).body(resource);
     }
+
+    @Operation(summary = "영상 썸네일 조회")
+    @GetMapping("/api/videos/{videoId}/thumbnail")
+    public ResponseEntity<Resource> thumbnail(@PathVariable @Positive Long videoId, Authentication authentication) {
+        Resource resource = queryService.thumbnail(videoId, authentication == null ? null : authentication.getName());
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).contentType(MediaType.IMAGE_JPEG).body(resource);
+    }
 }

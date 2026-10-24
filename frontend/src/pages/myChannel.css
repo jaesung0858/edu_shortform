@@ -7,6 +7,14 @@
     padding: 24px;
 }
 
+.thumbnail-preview {
+    display: block;
+    width: 180px;
+    max-height: 240px;
+    object-fit: contain;
+    background: #111;
+}
+
 .upload-page > p {
     margin: 12px 0 20px;
     line-height: 1.6;

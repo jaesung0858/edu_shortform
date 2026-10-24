@@ -15,6 +15,7 @@ Spring 공식 [Uploading Files](https://spring.io/guides/gs/uploading-files/)와
 | 항목 | 필수 | 내용 |
 | --- | --- | --- |
 | file | O | MP4 파일, 최대 100MB |
+| thumbnail | X | JPEG 이미지, 최대 1MB, 가로·세로 각 1,920픽셀 이하 |
 | title | O | 제목, 공백만으로 입력 불가, 최대 100자 |
 | description | X | 설명, 최대 1,000자 |
 | categoryId | O | DB에 존재하는 카테고리 번호 |
@@ -36,6 +37,13 @@ Spring 공식 [Uploading Files](https://spring.io/guides/gs/uploading-files/)와
 프론트에서는 브라우저의 영상 메타데이터로 길이를 자동으로 읽고 초 단위로 올림해 `durationSec`에 전달합니다.
 사용자가 길이를 직접 입력하지 않습니다. 서버는 전달받은 값을 저장하며 길이나 코덱을 별도로 추출하지는 않습니다.
 MP4 확장자와 파일 앞부분의 `ftyp` 헤더를 확인하며, 전체 파일의 재생 가능 여부를 검사하는 것은 아닙니다.
+
+프론트는 영상의 약 0.5초 지점(1초보다 짧으면 재생 길이의 절반)을 캡처합니다.
+캡처 이미지는 원래 비율을 유지하며 긴 변이 최대 480픽셀인 JPEG로 만들어 `thumbnail` 부분에 함께 전송합니다.
+[영상 구간 이동 완료 이벤트](https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/seeked_event) 후
+[Canvas 이미지 변환](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob)으로 생성합니다.
+서버는 이미지 형식·크기·해상도를 검사하고 JPEG로 다시 저장한 파일명을 `thumbnail_key`에 기록합니다.
+기존 API와의 호환을 위해 썸네일 없이 업로드해도 등록할 수 있습니다.
 
 ## 응답
 
@@ -59,7 +67,7 @@ MP4 확장자와 파일 앞부분의 `ftyp` 헤더를 확인하며, 전체 파�
 로그인 없이 조회할 수 있으며, 12개씩 반환합니다. `categoryId`를 생략하면 전체 분류를 조회합니다.
 숨김·삭제 영상과 삭제된 회원의 영상은 제외합니다.
 
-- `videos`: videoId, title, creatorNickname, categoryId, categoryName, tagName, viewCount, likeCount, durationSec, createdAt, status
+- `videos`: videoId, title, creatorNickname, categoryId, categoryName, tagName, viewCount, likeCount, durationSec, createdAt, status, thumbnailUrl
 - `categories`: 공개 영상이 있는 카테고리의 categoryId, name
 - `hasNext`: 다음 목록 존재 여부
 - 잘못된 page나 categoryId는 400을 반환합니다. page는 0 이상, categoryId는 양수입니다.
@@ -72,9 +80,10 @@ MP4 확장자와 파일 앞부분의 `ftyp` 헤더를 확인하며, 전체 파�
 | --- | --- | --- |
 | GET /api/videos/{videoId} | 200, 영상 정보와 videoUrl | 400: 잘못된 번호, 404: 영상 없음·접근 불가 |
 | GET /api/videos/{videoId}/content | 200: MP4 전체, 206: 요청한 구간 | 400: 잘못된 번호, 404: 파일 없음·접근 불가, 416: 범위 초과 |
+| GET /api/videos/{videoId}/thumbnail | 200: JPEG 이미지 | 400: 잘못된 번호, 404: 썸네일 없음·접근 불가 |
 | GET /api/users/me/videos?page=0 | 200, 내 영상 목록과 hasNext | 400: 잘못된 page, 401: 로그인 필요 |
 
-상세 응답은 videoId, title, description, creatorNickname, categoryName, tagName, viewCount, likeCount, durationSec, status, videoUrl을 반환합니다.
+상세 응답은 videoId, title, description, creatorNickname, categoryName, tagName, viewCount, likeCount, durationSec, status, videoUrl, thumbnailUrl을 반환합니다.
 videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드를 누르면 `/videos/영상번호` 화면에서 해당 파일을 재생합니다.
 [Spring MVC의 구간 요청 처리](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-range.html)를 사용해 재생바 이동을 지원합니다.
 
@@ -87,8 +96,8 @@ videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드
 | 400 | 필수 항목 누락, 글자 수·숫자 제한 위반, 빈 파일, 카테고리와 태그 불일치 |
 | 401 | 로그인하지 않았거나 세션의 회원이 삭제됨 |
 | 404 | 카테고리 또는 개념 태그가 없음 |
-| 413 | 파일 100MB 또는 전체 요청 101MB 초과 |
-| 415 | MP4 확장자·헤더가 아니거나 요청의 Content-Type이 잘못됨 |
+| 413 | 영상 100MB, 썸네일 1MB 또는 전체 요청 102MB 초과 |
+| 415 | MP4 확장자·헤더 오류, JPEG 형식·해상도 제한 위반 또는 잘못된 Content-Type |
 | 500 | 파일 저장 또는 DB 등록 실패 |
 
 ## 저장 위치
@@ -98,6 +107,8 @@ videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드
 
 파일명은 UUID로 새로 생성합니다. 서버를 다시 시작해도 파일을 유지하며, DB 트랜잭션이 롤백되면 저장한 파일을 삭제합니다.
 파일 정리에 실패한 경우에는 서버 로그에 파일명을 남깁니다. `uploads/`는 기존 Git 제외 설정에 포함돼 있습니다.
+영상은 `.mp4`, 썸네일은 `.jpg`로 저장합니다. DB 등록이 롤백되면 두 파일을 모두 정리합니다.
+기존에 등록된 영상의 썸네일은 자동으로 생성하지 않으며, 썸네일이 없으면 목록에 기본 이미지를 표시합니다.
 
 ## 확인 방법
 

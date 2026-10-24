@@ -95,7 +95,7 @@ public class VideoUploadService {
 
     // 로그인한 회원의 영상 등록
     @Transactional
-    public VideoUploadResponse upload(String email, MultipartFile file, VideoUploadRequest request) {
+    public VideoUploadResponse upload(String email, MultipartFile file, VideoUploadRequest request, MultipartFile thumbnail) {
         User creator = userRepository.findByEmail(email)
                 .filter(user -> !user.isDeleted())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
@@ -108,22 +108,30 @@ public class VideoUploadService {
         }
 
         String videoKey = storageService.store(file);
+        deleteOnRollback(videoKey);
+        String thumbnailKey = thumbnail == null ? null : storageService.storeThumbnail(thumbnail);
+        if (thumbnailKey != null) deleteOnRollback(thumbnailKey);
+
+        Video video = new Video(creator, category, tag, request.title().trim(),
+                request.description(), videoKey, request.durationSec());
+        video.attachThumbnail(thumbnailKey);
+        videoRepository.saveAndFlush(video);
+        return new VideoUploadResponse(video.getId(), video.getTitle(), video.getVideoKey());
+    }
+
+    private void deleteOnRollback(String key) {
         // DB 롤백 시 파일도 삭제 (커밋 중 실패한 경우 포함)
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
             @Override
             public void afterCompletion(int status) {
                 if (status == STATUS_ROLLED_BACK) {
                     try {
-                        storageService.delete(videoKey);
+                        storageService.delete(key);
                     } catch (IOException e) {
-                        log.error("등록 실패 영상 파일 정리 필요: {}", videoKey, e);
+                        log.error("등록 실패 파일 정리 필요: {}", key, e);
                     }
                 }
             }
         });
-
-        Video video = videoRepository.saveAndFlush(new Video(creator, category, tag,
-                request.title().trim(), request.description(), videoKey, request.durationSec()));
-        return new VideoUploadResponse(video.getId(), video.getTitle(), video.getVideoKey());
     }
 }

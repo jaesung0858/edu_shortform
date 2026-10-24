@@ -43,10 +43,11 @@ public class VideoUploadController {
                                       @RequestBody(content = @Content(encoding = @Encoding(
                                               name = "request", contentType = MediaType.APPLICATION_JSON_VALUE)))
                                       @Valid @RequestPart("request") VideoUploadRequest request,
+                                      @RequestPart(value = "thumbnail", required = false) MultipartFile thumbnail,
                                       Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        return uploadService.upload(authentication.getName(), file, request);
+        return uploadService.upload(authentication.getName(), file, request, thumbnail);
     }
 }

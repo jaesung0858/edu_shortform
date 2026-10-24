@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.util.StringUtils;
 
 @Service
 public class VideoQueryService {
@@ -57,12 +58,25 @@ public class VideoQueryService {
         return new VideoDetailResponse(video.getId(), video.getTitle(), video.getDescription(),
                 video.getCreator().getNickname(), video.getCategory().getName(), video.getTag().getName(),
                 video.getViewCount(), video.getLikeCount(), video.getDurationSec(), video.getStatus().name(),
-                "/api/videos/" + video.getId() + "/content");
+                "/api/videos/" + video.getId() + "/content", thumbnailUrl(video));
     }
 
     @Transactional(readOnly = true)
     public Resource content(Long videoId, String email) {
         return storageService.load(accessibleVideo(videoId, email).getVideoKey());
+    }
+
+    @Transactional(readOnly = true)
+    public Resource thumbnail(Long videoId, String email) {
+        Video video = accessibleVideo(videoId, email);
+        if (!StringUtils.hasText(video.getThumbnailKey())) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "썸네일이 없습니다.");
+        }
+        return storageService.load(video.getThumbnailKey());
+    }
+
+    private String thumbnailUrl(Video video) {
+        return StringUtils.hasText(video.getThumbnailKey()) ? "/api/videos/" + video.getId() + "/thumbnail" : null;
     }
 
     private Video accessibleVideo(Long videoId, String email) {
@@ -76,7 +90,7 @@ public class VideoQueryService {
                         video.getCreator().getNickname(), video.getCategory().getId(),
                         video.getCategory().getName(), video.getTag().getName(),
                         video.getViewCount(), video.getLikeCount(), video.getDurationSec(),
-                        video.getCreatedAt(), video.getStatus().name()))
+                        video.getCreatedAt(), video.getStatus().name(), thumbnailUrl(video)))
                 .toList();
     }
 }

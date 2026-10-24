@@ -29,7 +29,7 @@ function VideoContent({ videoId }) {
       <h2>{state.video.title}</h2>
       {state.video.status === 'HIDDEN' && <p>숨김 영상입니다. 작성자에게만 표시됩니다.</p>}
       {failed ? <p role="alert">영상 파일을 재생할 수 없습니다. 저장된 파일이나 영상 형식을 확인해주세요.</p>
-        : <video src={state.video.videoUrl} controls autoPlay muted playsInline preload="metadata"
+        : <video src={state.video.videoUrl} poster={state.video.thumbnailUrl || undefined} controls autoPlay muted playsInline preload="metadata"
             aria-label={state.video.title} onError={() => setFailed(true)} />}
       <p>{state.video.creatorNickname}</p>
       <p>{state.video.categoryName} · {state.video.tagName}</p>

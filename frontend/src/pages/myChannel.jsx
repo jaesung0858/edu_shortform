@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useOutletContext } from 'react-router-dom'
 import { createVideoCategory, createVideoTag, getVideoCategories, uploadVideo } from '../api/videos'
-import { readVideoDuration } from '../utils/videoMetadata'
+import { readVideoMetadata } from '../utils/videoMetadata'
 import VideoList from '../components/VideoList'
 import './myChannel.css'
 
@@ -15,9 +15,13 @@ export default function MyChannel() {
     const [creator, setCreator] = useState({ kind: '', name: '', pending: false, error: '' })
     const [duration, setDuration] = useState({ status: 'empty', seconds: 0, error: '' })
     const [listVersion, setListVersion] = useState(0)
+    const [thumbnailPreview, setThumbnailPreview] = useState('')
     const metadataRead = useRef(null)
 
     useEffect(() => () => metadataRead.current?.abort(), [])
+    useEffect(() => () => {
+        if (thumbnailPreview) URL.revokeObjectURL(thumbnailPreview)
+    }, [thumbnailPreview])
 
     useEffect(() => {
         if (!user) return
@@ -34,6 +38,7 @@ export default function MyChannel() {
         metadataRead.current?.abort()
         const file = event.target.files?.[0]
         setResult({ error: '', title: '' })
+        setThumbnailPreview('')
         if (!file) {
             setDuration({ status: 'empty', seconds: 0, error: '' })
             return
@@ -46,8 +51,10 @@ export default function MyChannel() {
         metadataRead.current = controller
         setDuration({ status: 'reading', seconds: 0, error: '' })
         try {
-            const seconds = await readVideoDuration(file, controller.signal)
-            setDuration({ status: 'ready', seconds, error: '' })
+            const metadata = await readVideoMetadata(file, controller.signal)
+            if (controller.signal.aborted) return
+            setDuration({ status: 'ready', seconds: metadata.seconds, thumbnail: metadata.thumbnail, error: '' })
+            setThumbnailPreview(URL.createObjectURL(metadata.thumbnail))
         } catch (error) {
             if (error.name !== 'AbortError') {
                 setDuration({ status: 'error', seconds: 0, error: error.message })
@@ -109,13 +116,14 @@ export default function MyChannel() {
                 title: form.get('title').trim(), description: form.get('description').trim(),
                 categoryId: Number(categoryId), tagId: Number(tagId),
                 durationSec: duration.seconds,
-            })
+            }, duration.thumbnail)
             setResult({ error: '', title: video.title })
             setListVersion(value => value + 1)
             element.reset()
             setCategoryId('')
             setTagId('')
             setDuration({ status: 'empty', seconds: 0, error: '' })
+            setThumbnailPreview('')
             setCreator({ kind: '', name: '', pending: false, error: '' })
         } catch (error) {
             const messages = {
@@ -152,10 +160,14 @@ export default function MyChannel() {
                 <input id="video-file" name="file" type="file" accept="video/mp4,.mp4" required onChange={handleFileChange} />
                 <div className="video-duration" role="status" aria-live="polite">
                     {duration.status === 'ready' ? `영상 길이: ${Math.floor(duration.seconds / 60)}분 ${duration.seconds % 60}초`
-                        : duration.status === 'reading' ? '영상 길이를 확인하고 있습니다…'
+                        : duration.status === 'reading' ? '영상 길이와 썸네일을 확인하고 있습니다…'
                             : '영상을 선택하면 길이가 자동으로 표시됩니다.'}
                 </div>
                 {duration.error && <p role="alert" className="upload-error">{duration.error}</p>}
+                {thumbnailPreview && <div>
+                    <p>자동 생성된 썸네일</p>
+                    <img className="thumbnail-preview" src={thumbnailPreview} alt="영상 썸네일 미리보기" />
+                </div>}
                 <label htmlFor="video-title">제목</label>
                 <input id="video-title" name="title" maxLength={100} pattern=".*\S.*" required />
                 <label htmlFor="video-description">설명</label>

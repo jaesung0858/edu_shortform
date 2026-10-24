@@ -66,7 +66,7 @@ class VideoUploadServiceTests {
 
     @Test
     void recordsLoggedInCreatorAndMetadataAndKeepsCommittedFile() throws IOException {
-        var response = service.upload("learner@example.com", file, request);
+        var response = service.upload("learner@example.com", file, request, null);
         ArgumentCaptor<Video> saved = ArgumentCaptor.forClass(Video.class);
         verify(videos).saveAndFlush(saved.capture());
         assertSame(creator, saved.getValue().getCreator());
@@ -110,20 +110,47 @@ class VideoUploadServiceTests {
     @Test
     void removesStoredFileWhenDatabaseWriteFails() throws IOException {
         when(videos.saveAndFlush(any(Video.class))).thenThrow(new DataIntegrityViolationException("test DB failure"));
-        assertThrows(DataIntegrityViolationException.class, () -> service.upload("learner@example.com", file, request));
+        assertThrows(DataIntegrityViolationException.class, () -> service.upload("learner@example.com", file, request, null));
         verify(storage).delete("saved.mp4");
     }
 
     @Test
     void removesStoredFileWhenTransactionCommitFails() throws IOException {
         transactions.failCommit = true;
-        assertThrows(TransactionSystemException.class, () -> service.upload("learner@example.com", file, request));
+        assertThrows(TransactionSystemException.class, () -> service.upload("learner@example.com", file, request, null));
         verify(storage).delete("saved.mp4");
+    }
+
+    @Test
+    void storesThumbnailKeyAndRemovesBothFilesOnCommitFailure() throws IOException {
+        var thumbnail = new MockMultipartFile("thumbnail", "frame.jpg", "image/jpeg", new byte[]{1});
+        when(storage.storeThumbnail(thumbnail)).thenReturn("saved.jpg");
+        service.upload("learner@example.com", file, request, thumbnail);
+        var saved = ArgumentCaptor.forClass(Video.class);
+        verify(videos).saveAndFlush(saved.capture());
+        assertEquals("saved.jpg", saved.getValue().getThumbnailKey());
+        verify(storage, never()).delete(any());
+
+        transactions.failCommit = true;
+        assertThrows(TransactionSystemException.class,
+                () -> service.upload("learner@example.com", file, request, thumbnail));
+        verify(storage).delete("saved.mp4");
+        verify(storage).delete("saved.jpg");
+    }
+
+    @Test
+    void removesVideoIfThumbnailIsRejected() throws IOException {
+        var thumbnail = new MockMultipartFile("thumbnail", "frame.jpg", "image/jpeg", new byte[]{1});
+        when(storage.storeThumbnail(thumbnail)).thenThrow(new ResponseStatusException(HttpStatus.UNSUPPORTED_MEDIA_TYPE));
+        assertThrows(ResponseStatusException.class,
+                () -> service.upload("learner@example.com", file, request, thumbnail));
+        verify(storage).delete("saved.mp4");
+        verifyNoInteractions(videos);
     }
 
     private void assertStatus(HttpStatus status) {
         assertEquals(status, assertThrows(ResponseStatusException.class,
-                () -> service.upload("learner@example.com", file, request)).getStatusCode());
+                () -> service.upload("learner@example.com", file, request, null)).getStatusCode());
     }
 
     private static class TestTransactionManager extends AbstractPlatformTransactionManager {

@@ -2,6 +2,9 @@ package com.team2.edu.video.service;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -90,6 +93,40 @@ class VideoStorageServiceTests {
         assertStatus(HttpStatus.NOT_FOUND, () -> service.load("missing.mp4"));
         assertStatus(HttpStatus.NOT_FOUND, () -> service.load("../outside.mp4"));
         assertStatus(HttpStatus.NOT_FOUND, () -> service.load(tempDirectory.getParent().resolve("outside.mp4").toString()));
+    }
+
+    @Test
+    void storesDecodedJpegUnderNewName() throws IOException {
+        var image = new BufferedImage(4, 6, BufferedImage.TYPE_INT_RGB);
+        var bytes = new ByteArrayOutputStream();
+        ImageIO.write(image, "jpg", bytes);
+        String key = storage(100).storeThumbnail(new MockMultipartFile("thumbnail", "frame.jpg", "image/jpeg", bytes.toByteArray()));
+        assertTrue(key.matches("[0-9a-f-]{36}\\.jpg"));
+        var saved = ImageIO.read(tempDirectory.resolve(key).toFile());
+        assertEquals(4, saved.getWidth());
+        assertEquals(6, saved.getHeight());
+    }
+
+    @Test
+    void rejectsEmptyOversizedNonJpegAndOversizedDimensions() throws IOException {
+        var service = storage(100);
+        assertStatus(HttpStatus.BAD_REQUEST, () -> service.storeThumbnail(
+                new MockMultipartFile("thumbnail", "empty.jpg", "image/jpeg", new byte[0])));
+        assertStatus(HttpStatus.CONTENT_TOO_LARGE, () -> service.storeThumbnail(
+                new MockMultipartFile("thumbnail", "large.jpg", "image/jpeg", new byte[1024 * 1024 + 1])));
+        assertStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE, () -> service.storeThumbnail(
+                new MockMultipartFile("thumbnail", "fake.jpg", "image/jpeg", "not an image".getBytes())));
+        var png = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB), "png", png);
+        assertStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE, () -> service.storeThumbnail(
+                new MockMultipartFile("thumbnail", "fake.jpg", "image/jpeg", png.toByteArray())));
+        var wide = new ByteArrayOutputStream();
+        ImageIO.write(new BufferedImage(1921, 1, BufferedImage.TYPE_INT_RGB), "jpg", wide);
+        assertStatus(HttpStatus.UNSUPPORTED_MEDIA_TYPE, () -> service.storeThumbnail(
+                new MockMultipartFile("thumbnail", "wide.jpg", "image/jpeg", wide.toByteArray())));
+        try (var files = Files.list(tempDirectory)) {
+            assertEquals(0, files.count());
+        }
     }
 
     private VideoStorageService storage(long maxBytes) {

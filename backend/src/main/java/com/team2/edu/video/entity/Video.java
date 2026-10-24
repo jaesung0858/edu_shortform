@@ -88,6 +88,10 @@ public class Video extends BaseTimeEntity {
         updatedAt = getCreatedAt();
     }
 
+    public void attachThumbnail(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
+    }
+
     @PreUpdate
     void onUpdate() {
         updatedAt = LocalDateTime.now();

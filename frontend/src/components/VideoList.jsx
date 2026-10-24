@@ -52,7 +52,10 @@ export default function VideoList({ showCategories = false, mine = false }) {
       <div className="video-zone">
         {list.videos.map(video => (
           <Link className="video" key={video.videoId} to={`/videos/${video.videoId}`}>
-            <img src={thumbnail} alt="영상 기본 썸네일" />
+            <img src={video.thumbnailUrl || thumbnail} alt={`${video.title} 썸네일`} loading="lazy"
+              onError={event => {
+                if (event.currentTarget.getAttribute('src') !== thumbnail) event.currentTarget.src = thumbnail
+              }} />
             <h3>{video.title}</h3>
             <p>조회수: {video.viewCount}</p><p>좋아요: {video.likeCount}</p>
             <h4>{video.creatorNickname}</h4>

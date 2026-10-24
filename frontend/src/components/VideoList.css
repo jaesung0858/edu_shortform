@@ -12,3 +12,8 @@
 .video-list .video:hover h3 {
   text-decoration: underline;
 }
+
+.video-list .video img {
+  object-fit: contain;
+  background: #111;
+}

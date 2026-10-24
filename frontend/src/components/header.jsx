@@ -3,7 +3,7 @@ import {Link} from "react-router-dom"
 import {useState} from "react"
 import logo from '../assets/logo.png'
 
-function Header(){
+function Header({user}){
     const [search, setSearch]= useState("");
     const id="홍길동";
     return(
@@ -14,7 +14,7 @@ function Header(){
             <input type="text" placeholder='검색어를 입력하세요' value={search} onChange={(e) => setSearch(e.target.value)}/>
             <button onClick={()=> console.log(search)}>검색</button>
             </div>
-            <div className='headId'> {id}님 반갑습니다</div>
+            <div className='headId'> {user?.nickname}님 반갑습니다</div>
             <button className='logout'onClick={()=>console.log("logout")}>로그아웃</button>
         </header>
     )

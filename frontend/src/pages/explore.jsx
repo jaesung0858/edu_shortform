@@ -1,4 +1,6 @@
 import {useState} from "react"
+import { useNavigate } from "react-router-dom";
+import clickVideo from "../components/clickVideo";
 import img from '../assets/video.png'
 import './explore.css'
 
@@ -15,6 +17,7 @@ function Explore(){
             { id: 9, title: "Python 입문 가이드", like: 270, look: 3900, creator: "서준호", category: "개발" , thumbnail:img},
             { id: 10, title: "신입사원이 알아야 할 보고법", like: 190, look: 2600, creator: "강다은", category: "직장생활" , thumbnail:img}]);
                 /*샘플 데이터*/
+    const navigate = useNavigate();
 
     return (
 
@@ -22,7 +25,7 @@ function Explore(){
 
                 {videos.map((video) => (
                     <div className="video" key={video.id}>
-                        <img src={video.thumbnail} alt="영상썸네일"/>
+                        <img src={video.thumbnail} alt="영상썸네일" onClick={() => clickVideo(navigate,video)}/>
                         <h3>{video.title}</h3>
                         <p>조회수: {video.look}</p><p>좋아요: {video.like}</p>
                         <h4>{video.creator}</h4>

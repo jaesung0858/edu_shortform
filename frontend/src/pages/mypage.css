@@ -1,0 +1,43 @@
+.mypage {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+}
+
+.profile,
+.watch-history,
+.liked-video,
+.wrong-note {
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.profile {
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.profile button {
+  align-self: flex-end;
+  margin-top: 10px;
+}
+
+.watch-history {
+  min-height: 200px;
+}
+
+.mypage-bottom-section {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 20px;
+}
+
+.mypage-bottom-section > div {
+  flex: 1;
+  min-width: 0;
+  min-height: 250px;
+}

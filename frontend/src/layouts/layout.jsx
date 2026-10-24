@@ -3,10 +3,10 @@ import Header from '../components/header';
 import {Outlet} from "react-router-dom";
 import './layout.css'
 
-function Layout(){
+function Layout({user}){
     return(
     <div className="layout">
-        <Header />
+        <Header user={user}/>
         <div className="layout-body">
             <Sidebar />
             <main className="layout-main">

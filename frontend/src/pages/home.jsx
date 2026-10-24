@@ -1,8 +1,10 @@
 import {useState} from "react"
+import { useNavigate } from "react-router-dom";
+import clickVideo from "../components/clickVideo";
 import './home.css'
 import img from '../assets/video.png'
 
-function Home(){
+function Home({user}){
     const [videos] = useState([ { id: 1, title: "React 기초 배우기", like: 120, look: 1500, creator: "김철수", category: "개발", thumbnail:img },
     { id: 2, title: "면접 자기소개 잘하는 법", like: 85, look: 980, creator: "이영희", category: "취업", thumbnail:img},
     { id: 3, title: "JavaScript 핵심 문법", like: 230, look: 3200, creator: "박민수", category: "개발" , thumbnail:img},
@@ -15,6 +17,7 @@ function Home(){
     { id: 10, title: "신입사원이 알아야 할 보고법", like: 190, look: 2600, creator: "강다은", category: "직장생활" , thumbnail:img}]);
         /*샘플 데이터*/
     const [filter, setFilter] =useState("전체");
+    const navigate =useNavigate();
 
     function filterVideo(filter){
         if (filter == "전체")
@@ -27,12 +30,13 @@ function Home(){
         fetch("....")
         .then(response => response.json())
         .then(data => setVideos(data))
-    },[]);*/ //나중에 api랑 연결
-
+    },[]);*/ //나중에 알고리즘 api랑 연결
+    
     return (
+        
         <div>
-
-            <div className="category">
+            
+            <div className="category">  
                 <button onClick={()=>setFilter("전체")}>전체</button>
                 {[...new Set(videos.map((video)=>video.category))].map((category) =>(
                     <div key={category}><button onClick={()=>setFilter(category)}>{category}</button></div>))}
@@ -42,7 +46,7 @@ function Home(){
 
                 {filterVideo(filter).map((video) => (
                     <div className="video" key={video.id}>
-                        <img src={video.thumbnail} alt="영상썸네일"/>
+                        <img src={video.thumbnail} alt="영상썸네일" onClick={() => clickVideo(navigate, video)}/>
                         <h3>{video.title}</h3>
                         <p>조회수: {video.look}</p><p>좋아요: {video.like}</p>
                         <h4>{video.creator}</h4>

@@ -1,13 +1,49 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import TextField from '../components/TextField'
 
-export default function LoginPage({ onNavigate }) {
-  const [message, setMessage] = useState('')
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
 
-  function handleSubmit(event) {
+export default function LoginPage({ onNavigate }) {
+  const navigate = useNavigate()
+  const [message, setMessage] = useState('')
+  const [pending, setPending] = useState(false)
+
+  async function handleSubmit(event) {
     event.preventDefault()
-    setMessage('로그인 API가 아직 연결되지 않았어요.')
+    if (pending) return
+
+    const form = new FormData(event.currentTarget)
+    const email = form.get('email').trim()
+    const password = form.get('password')
+    setPending(true)
+    setMessage('')
+
+    try {
+      const response = await fetch(`${apiBaseUrl}/api/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        },
+        body: new URLSearchParams({ username: email, password }),
+      })
+
+      if (!response.ok) {
+        setMessage(response.status === 401
+          ? '이메일 또는 비밀번호를 확인해주세요.'
+          : '로그인하지 못했습니다. 잠시 후 다시 시도해주세요.')
+        return
+      }
+
+      navigate('/myChannel', { replace: true })
+    } catch {
+      setMessage('로그인하지 못했습니다. 서버 연결을 확인한 뒤 다시 시도해주세요.')
+    } finally {
+      setPending(false)
+    }
   }
 
   return (
@@ -30,6 +66,7 @@ export default function LoginPage({ onNavigate }) {
           type="email"
           placeholder="이메일 주소를 입력하세요"
           autoComplete="email"
+          maxLength={100}
         />
         <TextField
           id="password"
@@ -40,16 +77,14 @@ export default function LoginPage({ onNavigate }) {
         />
 
         <div className="login-options">
-          <label className="remember-option" htmlFor="remember">
-            <input id="remember" name="remember" type="checkbox" />
-            <span>로그인 상태 유지</span>
-          </label>
           <button className="text-button" type="button" onClick={() => onNavigate('forgot')}>
             비밀번호 찾기
           </button>
         </div>
 
-        <button className="login-button" type="submit">로그인</button>
+        <button className="login-button" type="submit" disabled={pending}>
+          {pending ? '로그인 중…' : '로그인'}
+        </button>
         <p className="login-message" role="status" aria-live="polite">{message}</p>
       </form>
     </AuthLayout>

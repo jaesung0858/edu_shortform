@@ -3,10 +3,14 @@ package com.team2.edu;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 class SecurityConfig {
@@ -34,8 +38,33 @@ class SecurityConfig {
                 ).permitAll()
                 .anyRequest().authenticated()
         ).formLogin(form -> form
-                .defaultSuccessUrl("/api/users/me", true)
+                .loginProcessingUrl("/api/login")
+                .successHandler((request, response, authentication) -> {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
+                        response.setStatus(HttpStatus.NO_CONTENT.value());
+                    } else {
+                        response.sendRedirect("/api/users/me");
+                    }
+                })
+                .failureHandler((request, response, exception) -> {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
+                        response.setStatus(HttpStatus.UNAUTHORIZED.value());
+                    } else {
+                        response.sendRedirect("/login?error");
+                    }
+                })
                 .permitAll()
+        ).logout(logout -> logout
+                .logoutUrl("/api/logout")
+                .logoutSuccessHandler((request, response, authentication) ->
+                        response.setStatus(HttpStatus.NO_CONTENT.value()))
+        ).exceptionHandling(exceptions -> exceptions
+                .defaultAuthenticationEntryPointFor(
+                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                        PathPatternRequestMatcher.withDefaults().matcher("/api/**")
+                )
         ).csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
 
         return http.build();

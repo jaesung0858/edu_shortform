@@ -1,4 +1,4 @@
-export default function TextField({ id, label, type = 'text', placeholder, autoComplete, minLength }) {
+export default function TextField({ id, label, type = 'text', placeholder, autoComplete, minLength, maxLength, pattern }) {
   return (
     <div className="field-group">
       <label htmlFor={id}>{label}</label>
@@ -9,6 +9,8 @@ export default function TextField({ id, label, type = 'text', placeholder, autoC
         placeholder={placeholder}
         autoComplete={autoComplete}
         minLength={minLength}
+        maxLength={maxLength}
+        pattern={pattern}
         required
       />
     </div>

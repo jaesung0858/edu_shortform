@@ -1,9 +1,20 @@
+import { useOutletContext } from 'react-router-dom'
 import VideoList from '../components/videoList'
 import'./mypage.css'
 import img from '../assets/video.png'
 
 
-function MyPage({user}){
+function MyPage(){
+
+    const {
+        user,
+        loading: sessionLoading,
+        error: sessionError
+    } = useOutletContext()
+
+    if (sessionLoading) {
+        return <p>회원 정보를 확인하고 있습니다.</p>
+    }
     const watchHistory = [{ id: 1, title: "React 기초 배우기", like: 120, look: 1500, creator: "김철수", category: "개발", thumbnail:img },
         { id: 2, title: "면접 자기소개 잘하는 법", like: 85, look: 980, creator: "이영희", category: "취업", thumbnail:img},
         { id: 3, title: "JavaScript 핵심 문법", like: 230, look: 3200, creator: "박민수", category: "개발" , thumbnail:img}];
@@ -28,13 +39,41 @@ function MyPage({user}){
         { id: 9, title: "Python 입문 가이드", like: 270, look: 3900, creator: "서준호", category: "개발" , thumbnail:img},
         { id: 10, title: "신입사원이 알아야 할 보고법", like: 190, look: 2600, creator: "강다은", category: "직장생활" , thumbnail:img}];
     
+    if (!user) {
+        return (
+            <section className="my-page">
+                <p className="my-page-message" role={sessionError ? 'alert' : undefined}>
+                {sessionError || '내 정보를 보려면 로그인해주세요.'}
+                </p>
+            </section>
+        )
+    }
+
     return (
         <div className="mypage">
         <div className="profile">
-            <p>이름:{user?.nickname}님</p>
-            <p>이메일:{user?.email}</p>
-            <button> 정보 수정하기 </button>
-            <button>탈퇴히가</button>
+            <div className="profile-user">
+                <div className="profile-avatar">
+                    {user?.nickname?.charAt(0) || 'U'}
+                </div>
+
+                <div className="profile-info">
+                    <h2>
+                        {user?.nickname || '사용자'}
+                        <span> 님</span>
+                    </h2>
+                    <p>{user?.email || '이메일 정보 없음'}</p>
+                </div>
+            </div>
+
+            <div className="profile-actions">
+                <button className="profile-edit">
+                    정보 수정
+                </button>
+                <button className="profile-delete">
+                    회원 탈퇴
+                </button>
+            </div>
         </div>
         <div className="watch-history"><VideoList title="시청기록" videos={watchHistory}/></div>
         <div className="mypage-bottom-section">

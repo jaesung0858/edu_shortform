@@ -14,15 +14,135 @@
   padding: 20px;
 }
 
+/* 프로필 카드 */
 .profile {
-  display: flex;
-  flex-direction: column;
-  padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+
+    padding: 28px 32px;
+    margin-bottom: 30px;
+
+    background: #ffffff;
+    border: 1px solid #e5e9f0;
+    border-radius: 16px;
+
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
 }
 
-.profile button {
-  align-self: flex-end;
-  margin-top: 10px;
+/* 프로필 사용자 영역 */
+.profile-user {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    min-width: 0;
+}
+
+/* 프로필 아이콘 */
+.profile-avatar {
+    width: 64px;
+    height: 64px;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #e8eeff;
+    color: #365bcb;
+
+    border-radius: 50%;
+
+    font-size: 26px;
+    font-weight: 700;
+}
+
+/* 닉네임 및 이메일 */
+.profile-info {
+    min-width: 0;
+}
+
+.profile-info h2 {
+    margin: 0 0 8px;
+    font-size: 22px;
+    font-weight: 700;
+    color: #222b3a;
+}
+
+.profile-info h2 span {
+    font-size: 15px;
+    font-weight: 400;
+    color: #7b8495;
+}
+
+.profile-info p {
+    margin: 0;
+    font-size: 14px;
+    color: #8a93a3;
+    overflow-wrap: anywhere;
+}
+
+/* 버튼 영역 */
+.profile-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* 공통 버튼 */
+.profile-actions button {
+    padding: 11px 17px;
+    border-radius: 8px;
+
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+
+    transition: background 0.2s, transform 0.2s;
+}
+
+.profile-actions button:hover {
+    transform: translateY(-2px);
+}
+
+/* 정보 수정 버튼 */
+.profile-edit {
+    background: #365bcb;
+    color: white;
+    border: 1px solid #365bcb;
+}
+
+.profile-edit:hover {
+    background: #2949aa;
+}
+
+/* 회원 탈퇴 버튼 */
+.profile-delete {
+    background: white;
+    color: #dc3545;
+    border: 1px solid #f1c4c8;
+}
+
+.profile-delete:hover {
+    background: #fff1f2;
+}
+
+/* 화면이 좁을 때 */
+@media (max-width: 700px) {
+    .profile {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 22px;
+    }
+
+    .profile-actions {
+        width: 100%;
+    }
+
+    .profile-actions button {
+        flex: 1;
+    }
 }
 
 .watch-history {

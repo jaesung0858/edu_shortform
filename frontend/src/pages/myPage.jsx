@@ -1,5 +1,5 @@
 import { useOutletContext } from 'react-router-dom'
-import VideoList from '../components/videoList'
+import MyPageVideoList from '../components/mypageVideoList'
 import'./mypage.css'
 import img from '../assets/video.png'
 
@@ -75,10 +75,10 @@ function MyPage(){
                 </button>
             </div>
         </div>
-        <div className="watch-history"><VideoList title="시청기록" videos={watchHistory}/></div>
+        <div className="watch-history"><MyPageVideoListVideoList title="시청기록" videos={watchHistory}/></div>
         <div className="mypage-bottom-section">
-            <div className="liked-video"><VideoList title="좋아요한 목록" videos={likedVideo}/></div>
-            <div className="wrong-note"><VideoList title="오답노트" videos={wrongVideos}/></div>
+            <div className="liked-video"><MyPageVideoList title="좋아요한 목록" videos={likedVideo}/></div>
+            <div className="wrong-note"><MyPageVideoList title="오답노트" videos={wrongVideos}/></div>
             </div>
         </div>
     )

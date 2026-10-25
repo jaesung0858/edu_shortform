@@ -40,7 +40,7 @@ export default function VideoList({ showCategories = false, mine = false }) {
 
   return (
     <div className="video-list">
-      {showCategories && <div className="category" aria-label="영상 카테고리">
+      {showCategories && <div className="category" aria-label="영상 카테고리" >
         <button type="button" aria-pressed={categoryId === ''} disabled={list.loading} onClick={() => selectCategory('')}>전체</button>
         {list.categories.map(category => (
           <button key={category.categoryId} type="button" disabled={list.loading}

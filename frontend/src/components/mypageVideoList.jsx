@@ -2,7 +2,7 @@ import './mypageVideoList.css'
 import clickVideo from './clickVideo'
 import { useNavigate } from 'react-router-dom';
 
-function mypageVideoList({title, videos}){
+function MyPageVideoList({title, videos}){
 
     const navigate = useNavigate();
     
@@ -20,4 +20,4 @@ function mypageVideoList({title, videos}){
     )
 
 }
-export default mypageVideoList
+export default MyPageVideoList

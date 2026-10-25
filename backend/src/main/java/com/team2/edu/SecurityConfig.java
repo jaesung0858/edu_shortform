@@ -24,8 +24,7 @@ class SecurityConfig {
     // 접근 권한과 세션 로그인 설정
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        var browserSuccess = new SimpleUrlAuthenticationSuccessHandler("/api/users/me");
-        var browserFailure = new SimpleUrlAuthenticationFailureHandler("/login?error");
+        
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos", "/api/videos/*", "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
@@ -74,8 +73,4 @@ class SecurityConfig {
         return http.build();
     }
 
-    private boolean wantsJson(HttpServletRequest request) {
-        String accept = request.getHeader("Accept");
-        return accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE);
-    }
 }

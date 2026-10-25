@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { LearningRoute, SummaryPage } from './features/learning'
 import { LoginFeature } from './features/login'
+import { VideoUploadPage } from './features/videoUpload'
 import Layout from './layouts/layout'
 import Home from './pages/home'
 import Explore from './pages/explore'
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/myChannel" element={<MyChannel />} />
         <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
+        <Route path="/channel/upload" element={<VideoUploadPage />} />
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />
       <Route path="/learn/:videoId" element={<LearningRoute />} />

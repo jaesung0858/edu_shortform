@@ -161,3 +161,55 @@
   min-width: 0;
   min-height: 250px;
 }
+
+/* 로그인 안내 영역 */
+.my-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 65vh;
+    padding: 30px;
+}
+
+/* 로그인 안내 메시지 카드 */
+.my-page-message {
+    width: 100%;
+    max-width: 440px;
+    box-sizing: border-box;
+
+    margin: 0;
+    padding: 45px 35px;
+
+    background: #ffffff;
+    border: 1px solid #e5e9f0;
+    border-radius: 16px;
+
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.06);
+
+    color: #000000;
+    font-size: 17px;
+    font-weight: 600;
+    line-height: 1.7;
+    text-align: center;
+}
+
+/* 오류 메시지가 표시될 때 */
+.my-page-message[role="alert"] {
+    color: #dc3545;
+    background: #fffafa;
+    border-color: #f1c4c8;
+}
+
+/* 모바일 화면 */
+@media (max-width: 600px) {
+    .my-page {
+        min-height: 50vh;
+        padding: 16px;
+    }
+
+    .my-page-message {
+        padding: 35px 20px;
+        font-size: 15px;
+    }
+}

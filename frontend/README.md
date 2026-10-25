@@ -21,7 +21,7 @@ npm run dev
 | `/login` | 로그인 화면 |
 | `/signup` | 회원가입 화면 |
 | `/forgot-password` | 비밀번호 찾기 화면 |
-| `/myChannel` | 영상 업로드와 내 영상 목록 |
+| `/myChannel` | 내 영상 목록 |
 | `/videos/:videoId` | 등록된 영상 재생 |
 | `/myPage` | 마이페이지 화면 자리 |
 | `/channel/upload` | 영상 등록 (파일 미리보기·영상 정보·확인 퀴즈) |

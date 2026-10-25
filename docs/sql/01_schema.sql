@@ -24,6 +24,7 @@ CREATE TABLE users (
 CREATE TABLE category (
     category_id INT NOT NULL AUTO_INCREMENT,
     name VARCHAR(30) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (category_id),
     CONSTRAINT uq_category_name UNIQUE (name)
 ) ENGINE = InnoDB;
@@ -32,6 +33,7 @@ CREATE TABLE concept_tag (
     tag_id INT NOT NULL AUTO_INCREMENT,
     category_id INT NOT NULL,
     name VARCHAR(50) NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (tag_id),
     CONSTRAINT uq_concept_tag_category_name UNIQUE (category_id, name),
     CONSTRAINT fk_concept_tag_category FOREIGN KEY (category_id)

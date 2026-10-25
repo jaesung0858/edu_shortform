@@ -48,6 +48,7 @@ public class VideoUploadController {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
+       
         return uploadService.upload(authentication.getName(), file, request, thumbnail);
     }
 }

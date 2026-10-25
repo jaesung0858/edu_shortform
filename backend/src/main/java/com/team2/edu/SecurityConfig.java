@@ -5,14 +5,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
-import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
@@ -47,17 +44,19 @@ class SecurityConfig {
         ).formLogin(form -> form
                 .loginProcessingUrl("/api/login")
                 .successHandler((request, response, authentication) -> {
-                    if (wantsJson(request)) {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
                         response.setStatus(HttpStatus.NO_CONTENT.value());
                     } else {
-                        browserSuccess.onAuthenticationSuccess(request, response, authentication);
+                        response.sendRedirect("/api/users/me");
                     }
                 })
                 .failureHandler((request, response, exception) -> {
-                    if (wantsJson(request)) {
+                    String accept = request.getHeader("Accept");
+                    if (accept != null && accept.contains(MediaType.APPLICATION_JSON_VALUE)) {
                         response.setStatus(HttpStatus.UNAUTHORIZED.value());
                     } else {
-                        browserFailure.onAuthenticationFailure(request, response, exception);
+                        response.sendRedirect("/login?error");
                     }
                 })
                 .permitAll()
@@ -66,8 +65,10 @@ class SecurityConfig {
                 .logoutSuccessHandler((request, response, authentication) ->
                         response.setStatus(HttpStatus.NO_CONTENT.value()))
         ).exceptionHandling(exceptions -> exceptions
-                .defaultAuthenticationEntryPointFor(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
-                        PathPatternRequestMatcher.withDefaults().matcher("/api/**"))
+                .defaultAuthenticationEntryPointFor(
+                        new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
+                        PathPatternRequestMatcher.withDefaults().matcher("/api/**")
+                )
         ).csrf(csrf -> csrf.ignoringRequestMatchers("/api/**"));
 
         return http.build();

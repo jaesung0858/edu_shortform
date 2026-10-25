@@ -1,7 +1,7 @@
 import httpClient from './httpClient'
 
-export async function signup(member) {
-  const { data } = await httpClient.post('/api/users', member)
+export async function signup({ email, password, nickname }) {
+  const { data } = await httpClient.post('/api/users', { email, password, nickname })
   return data
 }
 

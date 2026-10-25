@@ -1,139 +1,247 @@
-.upload-page {
-    max-width: 760px;
-    padding: 32px 24px;
+.my-channel-page {
+  width: min(100%, 1200px);
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(24px, 4vw, 48px) clamp(16px, 3vw, 32px) 56px;
+  color: var(--text);
 }
 
-.channel-videos {
-    padding: 24px;
+.my-channel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
 }
 
-.thumbnail-preview {
-    display: block;
-    width: 180px;
-    max-height: 240px;
-    object-fit: contain;
-    background: #111;
+.my-channel-heading > div { min-width: 0; }
+
+.my-channel-heading h1 {
+  margin: 0 0 8px;
+  color: var(--text-h);
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1.2;
 }
 
-.upload-page > p {
-    margin: 12px 0 20px;
-    line-height: 1.6;
+.my-channel-heading p {
+  margin: 0;
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-.upload-page fieldset {
-    display: grid;
-    gap: 10px;
-    padding: 0;
-    border: 0;
-    margin: 24px 0 16px;
+.my-channel-upload-button,
+.my-channel-more-button,
+.my-channel-error button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 18px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease, box-shadow 150ms ease;
 }
 
-.upload-page label {
-    color: var(--text-h);
-    margin-top: 8px;
-    font-size: 16px;
+.my-channel-upload-button:hover,
+.my-channel-more-button:hover,
+.my-channel-error button:hover {
+  border-color: var(--accent-border);
+  opacity: 0.92;
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
 }
 
-.upload-page input,
-.upload-page textarea,
-.upload-page select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg);
-    color: var(--text-h);
-    font: inherit;
-    font-size: 16px;
+.my-channel-upload-button:focus-visible,
+.my-channel-more-button:focus-visible,
+.my-channel-error button:focus-visible,
+.my-channel-error a:focus-visible,
+.my-channel-login-link:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 3px;
 }
 
-.upload-page textarea {
-    resize: vertical;
+.my-channel-video-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px 20px;
 }
 
-.upload-page button {
-    justify-self: start;
-    padding: 12px 24px;
-    margin-top: 12px;
-    border: 0;
-    border-radius: 6px;
-    background: #5365c8;
-    color: #fff;
-    font: inherit;
-    cursor: pointer;
+.my-channel-video-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+  box-shadow: 0 2px 10px rgba(8, 6, 13, 0.035);
+  transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
 }
 
-.upload-page :focus-visible {
-    outline: 3px solid #7581e7;
-    outline-offset: 2px;
+.my-channel-video-card:hover {
+  border-color: var(--accent-border);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
 }
 
-.upload-page button:disabled,
-.login-button:disabled {
-    opacity: 0.6;
-    cursor: wait;
+.my-channel-video-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  background: var(--code-bg);
 }
 
-.upload-page .upload-error,
-.session-error {
-    color: #c23535;
+.my-channel-video-info {
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  padding: 14px;
 }
 
-.upload-page .upload-success {
-    color: #21733b;
+.my-channel-video-info h2 {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-h);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.session-error {
-    padding: 8px 24px;
+.my-channel-video-info p {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
 }
 
-.classification-row {
-    display: flex;
-    align-items: stretch;
-    gap: 8px;
+.my-channel-video-info p + p {
+  padding-top: 2px;
+  color: var(--text);
+  font-size: 12px;
 }
 
-.classification-row select,
-.classification-row input {
-    flex: 1;
-    min-width: 0;
+.my-channel-video-status {
+  width: fit-content;
+  padding: 3px 9px;
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+  font-size: 12px;
+  font-weight: 600;
 }
 
-.classification-row button {
-    margin: 0;
-    padding: 10px 14px;
-    white-space: nowrap;
-    font-size: 15px;
+.my-channel-message,
+.my-channel-error,
+.my-channel-api-note {
+  margin: 20px 0;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  line-height: 1.6;
 }
 
-.classification-create {
-    display: grid;
-    gap: 10px;
-    margin-top: 8px;
+.my-channel-message {
+  color: var(--text);
+  text-align: center;
 }
 
-.video-duration {
-    font-size: 15px;
-    line-height: 1.6;
+.my-channel-error {
+  display: flex;
+  align-items: center;
+  gap: 12px 16px;
+  flex-wrap: wrap;
+  border-color: var(--accent-border);
 }
 
-@media (max-width: 480px) {
-    .classification-row {
-        flex-wrap: wrap;
-    }
+.my-channel-error p { margin: 0; }
+.my-channel-error a,
+.my-channel-login-link { color: var(--accent); font-weight: 600; }
+.my-channel-error button { min-height: 40px; padding: 8px 14px; }
 
-    .classification-row input {
-        flex-basis: 100%;
-    }
+.my-channel-more-button {
+  display: flex;
+  min-width: 140px;
+  margin: 28px auto 0;
 }
 
-@media (prefers-color-scheme: dark) {
-    .upload-page .upload-error,
-    .session-error {
-        color: #ff9696;
-    }
-
-    .upload-page .upload-success {
-        color: #77d69a;
-    }
+.my-channel-more-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
 }
+
+.my-channel-api-note {
+  margin-top: 32px;
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+  color: var(--text);
+  font-size: 13px;
+}
+
+@media (max-width: 1024px) {
+  .my-channel-video-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .my-channel-video-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
+  .my-channel-heading { align-items: flex-start; }
+}
+
+@media (max-width: 520px) {
+  .my-channel-page { padding: 24px 16px 36px; }
+  .my-channel-heading { flex-direction: column; gap: 16px; margin-bottom: 24px; }
+  .my-channel-upload-button { width: 100%; }
+  .my-channel-video-grid { gap: 12px 10px; }
+  .my-channel-video-info { gap: 6px; padding: 10px; }
+  .my-channel-video-info h2 { font-size: 15px; }
+  .my-channel-video-info p { font-size: 12px; }
+  .my-channel-message, .my-channel-error, .my-channel-api-note { padding: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .my-channel-upload-button,
+  .my-channel-more-button,
+  .my-channel-error button,
+  .my-channel-video-card { transition: none; }
+}
+
+/* 인증 확인 및 로그인 안내 상태도 페이지 제목·버튼 규칙을 공유한다. */
+.my-channel-page > h1 {
+  margin: 0 0 12px;
+  color: var(--text-h);
+  font-size: clamp(28px, 3vw, 36px);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+
+.my-channel-page > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.my-channel-page > a:hover { opacity: 0.9; }

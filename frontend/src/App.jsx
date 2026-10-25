@@ -8,19 +8,48 @@ import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
+import {useState, useEffect} from 'react'
 import './App.css'
 
 export default function App() {
+  const [user, setUser] = useState(null);
+  const [isLogin, setIsLogin]= useState(false);
+  const [loading, setLoading]=useState(true);
+
+  useEffect(() => {
+    fetch("/api/users/me", {
+      credentials: "include"
+    })
+      .then((res) => {
+        if(!res.ok || res.redirected) {
+          throw new Error("로그인되지 않음");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setUser(data);
+        setIsLogin(true);
+      })
+      .catch(() => {
+        setUser(null);
+        setIsLogin(false);
+      })
+      .finally(() => setLoading(false));
+
+  },[]);
+
   return (
     <Routes>
-      <Route element={<Layout />}>
+      <Route element={<Layout user={user} />}>
         <Route index element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Home />} />
+        <Route path="/home" element={<Home user={user} />} />
         <Route path="/explore" element={<Explore />} />
         <Route path="/myChannel" element={<MyChannel />} />
         <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
+        <Route path="/myChannel" element={<MyChannel user={user}/>} />
+        <Route path="/myPage" element={<MyPage user={user}/>} />
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />
       <Route path="/learn/:videoId" element={<LearningRoute />} />

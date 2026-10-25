@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useOutletContext } from 'react-router-dom'
+import {
+  getVideoCategories,
+  createVideoCategory,
+  createVideoTag,
+  uploadVideo,
+} from '../../../api/videos'
+
 import {
   ACCEPT_VIDEO_TYPES,
   MAX_VIDEO_BYTES,
-  getVideoCategories,
   toUploadErrorMessage,
-  uploadVideo,
 } from '../api/videoUploadApi'
 import QuizFields from '../components/QuizFields'
 import '../videoUpload.css'
@@ -34,7 +39,18 @@ function captureThumbnail(video) {
 // /channel/upload — 영상 파일 선택(미리보기) → 정보·퀴즈 입력 → 등록 → 내 채널로 이동
 export default function VideoUploadPage() {
   const navigate = useNavigate()
+  const {
+    user,
+    loading,
+    error: sessionError
+  } = useOutletContext()
   const [categories, setCategories] = useState({ status: 'loading', list: [] })
+  const [creator, setCreator] = useState({
+    kind: '',
+    name: '',
+    pending: false,
+    error: '',
+  })
 
   const [file, setFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState(null)
@@ -137,44 +153,137 @@ export default function VideoUploadPage() {
     setQuizzes((list) => list.map((q, i) => (i === index ? quiz : q)))
   }
 
+  
+  
+  async function createClassification() {
+    const name = creator.name.trim()
+
+    if (
+      !name ||
+      creator.pending ||
+      !['category', 'tag'].includes(creator.kind) ||
+      (creator.kind === 'tag' && !categoryId)
+    ) return
+
+    setCreator(prev => ({
+      ...prev,
+      pending: true,
+      error: '',
+    }))
+
+    try {
+      if (creator.kind === 'category') {
+        const category = await createVideoCategory(name)
+
+        setCategories(prev => ({
+          ...prev,
+          list: [...prev.list, category],
+        }))
+
+        setCategoryId(String(category.categoryId))
+        setTagId('')
+
+      } else {
+        const tag = await createVideoTag(categoryId, name)
+
+        setCategories(prev => ({
+          ...prev,
+          list: prev.list.map(category =>
+            String(category.categoryId) === String(categoryId)
+              ? {
+                  ...category,
+                  tags: [...(category.tags || []), tag],
+                }
+              : category
+          ),
+        }))
+
+        setTagId(String(tag.tagId))
+      }
+
+      setCreator({
+        kind: '',
+        name: '',
+        pending: false,
+        error: '',
+      })
+
+    } catch (error) {
+      const kind = creator.kind === 'category'
+        ? '카테고리'
+        : '개념 태그'
+
+      const status = error.response?.status
+
+      setCreator(prev => ({
+        ...prev,
+        pending: false,
+        error:
+          status === 409
+            ? `이미 등록된 ${kind}입니다.`
+            : status === 401
+              ? '로그인이 만료되었습니다.'
+              : `${kind} 추가에 실패했습니다.`,
+      }))
+    }
+  }
+
+
+
+  
   async function handleSubmit(event) {
     event.preventDefault()
-    if (!canSubmit) return
+    if (!canSubmit || submitting) return
 
     setSubmitting(true)
     setProgress(0)
     setError('')
+
+    const metadata = {
+      title: title.trim(),
+      description: description.trim() || null,
+      categoryId: Number(categoryId),
+      tagId: Number(tagId),
+      durationSec,
+    }
+
     try {
-      await uploadVideo(
-        {
-          file,
-          thumbnail,
-          request: {
-            title: title.trim(),
-            description: description.trim() || null,
-            categoryId: Number(categoryId),
-            tagId: Number(tagId),
-            durationSec,
-            quizzes: quizzes.map(({ question, options, answerNo, explanation }) => ({
-              question: question.trim(),
-              option1: options[0].trim(),
-              option2: options[1].trim(),
-              option3: options[2].trim(),
-              option4: options[3].trim(),
-              answerNo,
-              explanation: explanation.trim() || null,
-            })),
-          },
-        },
-        setProgress,
-      )
+      // 기존 videos.js의 업로드 함수 사용
+      await uploadVideo(file, metadata, thumbnail)
+
+      setProgress(100)
       setDone(true)
-      redirectTimer.current = setTimeout(() => navigate(MY_CHANNEL_PATH), 1500)
+
+      redirectTimer.current = setTimeout(() => {
+        navigate(MY_CHANNEL_PATH)
+      }, 1500)
+
     } catch (e) {
       setError(toUploadErrorMessage(e))
     } finally {
       setSubmitting(false)
     }
+  }
+
+
+  if (loading) {
+    return (
+      <div className="vu-page">
+        <p>회원 정보를 확인하고 있습니다.</p>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="vu-page">
+        <h2>로그인이 필요합니다.</h2>
+        <p>
+          {sessionError || '로그인 후 영상을 업로드할 수 있습니다.'}
+        </p>
+        <Link to="/login">로그인하기</Link>
+      </div>
+    )
   }
 
   return (
@@ -253,30 +362,143 @@ export default function VideoUploadPage() {
               <small className="vu-count">{description.length}/1000</small>
             </label>
 
+            
             <div className="vu-row">
-              <label className="vu-field">
-                <span>카테고리 <em>*</em></span>
+              {/* 카테고리 */}
+              <div className="vu-field">
+                <label htmlFor="vu-category">
+                  카테고리 <em>*</em>
+                </label>
+
                 <select
+                  id="vu-category"
                   value={categoryId}
                   disabled={categories.status !== 'ready'}
                   onChange={(e) => handleCategoryChange(e.target.value)}
                 >
-                  <option value="">{categories.status === 'loading' ? '불러오는 중…' : '선택하세요'}</option>
+                  <option value="">
+                    {categories.status === 'loading'
+                      ? '불러오는 중…'
+                      : '선택하세요'}
+                  </option>
+
                   {categories.list.map((c) => (
-                    <option key={c.categoryId} value={c.categoryId}>{c.name}</option>
+                    <option key={c.categoryId} value={c.categoryId}>
+                      {c.name}
+                    </option>
                   ))}
                 </select>
-              </label>
-              <label className="vu-field">
-                <span>개념 태그 <em>*</em></span>
-                <select value={tagId} disabled={!categoryId} onChange={(e) => setTagId(e.target.value)}>
-                  <option value="">{categoryId ? '선택하세요' : '카테고리를 먼저 선택'}</option>
+
+                <button
+                  type="button"
+                  className="vu-secondary"
+                  disabled={creator.pending}
+                  onClick={() => setCreator({
+                    kind: 'category',
+                    name: '',
+                    pending: false,
+                    error: '',
+                  })}
+                >
+                  + 새 카테고리
+                </button>
+              </div>
+
+              {/* 개념 태그 */}
+              <div className="vu-field">
+                <label htmlFor="vu-tag">
+                  개념 태그 <em>*</em>
+                </label>
+
+                <select
+                  id="vu-tag"
+                  value={tagId}
+                  disabled={!categoryId}
+                  onChange={(e) => setTagId(e.target.value)}
+                >
+                  <option value="">
+                    {categoryId
+                      ? '선택하세요'
+                      : '카테고리를 먼저 선택'}
+                  </option>
+
                   {tags.map((t) => (
-                    <option key={t.tagId} value={t.tagId}>{t.name}</option>
+                    <option key={t.tagId} value={t.tagId}>
+                      {t.name}
+                    </option>
                   ))}
                 </select>
-              </label>
+
+                <button
+                  type="button"
+                  className="vu-secondary"
+                  disabled={!categoryId || creator.pending}
+                  onClick={() => setCreator({
+                    kind: 'tag',
+                    name: '',
+                    pending: false,
+                    error: '',
+                  })}
+                >
+                  + 새 태그
+                </button>
+              </div>
             </div>
+
+            {/* 새 카테고리 / 태그 입력창 */}
+            {creator.kind && (
+              <div className="vu-field">
+                <label htmlFor="vu-classification">
+                  새 {creator.kind === 'category'
+                    ? '카테고리'
+                    : '개념 태그'} 이름
+                </label>
+
+                <input
+                  id="vu-classification"
+                  value={creator.name}
+                  maxLength={creator.kind === 'category' ? 30 : 50}
+                  placeholder="이름을 입력하세요"
+                  onChange={(e) => setCreator(prev => ({
+                    ...prev,
+                    name: e.target.value,
+                    error: '',
+                  }))}
+                />
+
+                <div className="vu-row">
+                  <button
+                    type="button"
+                    className="vu-secondary"
+                    disabled={!creator.name.trim() || creator.pending}
+                    onClick={createClassification}
+                  >
+                    {creator.pending ? '추가 중…' : '추가'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className="vu-secondary"
+                    disabled={creator.pending}
+                    onClick={() => setCreator({
+                      kind: '',
+                      name: '',
+                      pending: false,
+                      error: '',
+                    })}
+                  >
+                    취소
+                  </button>
+                </div>
+
+                {creator.error && (
+                  <p className="vu-error" role="alert">
+                    {creator.error}
+                  </p>
+                )}
+              </div>
+            )}
+
             {categories.status === 'error' && (
               <p className="vu-error" role="alert">카테고리를 불러오지 못했어요. {categories.message}</p>
             )}

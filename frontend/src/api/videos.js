@@ -43,6 +43,9 @@ export async function uploadVideo(file, metadata, thumbnail) {
   form.append('file', file)
   form.append('request', new Blob([JSON.stringify(metadata)], { type: 'application/json' }))
   if (thumbnail) form.append('thumbnail', thumbnail, 'thumbnail.jpg')
+  for (const [key, value] of form.entries()) {
+    console.log('FormData:', key, value)
+  }
   const { data } = await httpClient.post('/api/videos', form)
   return data
 }

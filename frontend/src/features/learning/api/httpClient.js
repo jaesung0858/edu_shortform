@@ -12,8 +12,4 @@ const httpClient = axios.create({
   withCredentials: true,
 })
 
-// TODO 임시: 백엔드가 users 테이블 로그인 연동 전까지 학습 API를 X-User-Id 헤더로 받는다.
-//   세션 로그인이 붙으면 이 헤더는 지울 것. (2 = docs/sql/02_test_users.sql 의 learner 계정이라고 가정)
-httpClient.defaults.headers.common['X-User-Id'] = import.meta.env.VITE_TEST_USER_ID || '2'
-
 export default httpClient

@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import AuthLayout from '../components/AuthLayout'
 import TextField from '../components/TextField'
+import { DEFAULT_POST_LOGIN_PATH, getPostLoginPath } from '../redirectTarget'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
 
 export default function LoginPage({ onNavigate }) {
   const navigate = useNavigate()
+  const location = useLocation()
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState(false)
 
@@ -38,7 +40,10 @@ export default function LoginPage({ onNavigate }) {
         return
       }
 
-      navigate('/myChannel', { replace: true })
+      navigate(
+        getPostLoginPath(location.state?.from) || DEFAULT_POST_LOGIN_PATH,
+        { replace: true },
+      )
     } catch {
       setMessage('로그인하지 못했습니다. 서버 연결을 확인한 뒤 다시 시도해주세요.')
     } finally {

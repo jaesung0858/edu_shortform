@@ -106,6 +106,30 @@ class VideoQueryIntegrationTests {
         mvc.perform(get("/api/videos").param("categoryId", "0")).andExpect(status().isBadRequest());
         mvc.perform(get("/api/videos").param("page", "invalid")).andExpect(status().isBadRequest());
         mvc.perform(post("/api/videos")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/videos").param("keyword", "a".repeat(101))).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void searchesTitlesWithCategoryAndTreatsWildcardsAsText() throws Exception {
+        var category = categories.saveAndFlush(new Category("search-" + suffix()));
+        var tag = tags.saveAndFlush(new ConceptTag(category, "search tag"));
+        var creator = member();
+        var match = videos.saveAndFlush(new Video(creator, category, tag, "SQL 100%_! 기초", "", "test.mp4", 30));
+        videos.saveAndFlush(new Video(creator, category, tag, "SQL 100ABC 기초", "", "test.mp4", 30));
+        videos.saveAndFlush(new Video(creator, category, tag, "다른 제목", "SQL", "test.mp4", 30));
+        var hidden = videos.saveAndFlush(new Video(creator, category, tag, "SQL 100%_! 숨김", "", "test.mp4", 30));
+        ReflectionTestUtils.setField(hidden, "status", VideoStatus.HIDDEN);
+        videos.saveAndFlush(hidden);
+
+        mvc.perform(get("/api/videos").param("categoryId", category.getId().toString()).param("keyword", "  %_!  "))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.videos[*].videoId").value(contains(match.getId().intValue())));
+        mvc.perform(get("/api/videos").param("categoryId", category.getId().toString()).param("keyword", "sql"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.videos.length()").value(2));
+        mvc.perform(get("/api/videos").param("categoryId", category.getId().toString()).param("keyword", " "))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.videos.length()").value(3));
+        mvc.perform(get("/api/videos").param("categoryId", category.getId().toString()).param("keyword", "없는 검색어"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.videos").isEmpty());
     }
 
     @Test

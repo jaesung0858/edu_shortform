@@ -27,6 +27,7 @@ class SecurityConfig {
         
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/videos/*/views").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos", "/api/videos/*", "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

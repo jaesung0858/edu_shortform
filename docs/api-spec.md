@@ -1,8 +1,8 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.10.28 / 현재 구현된 코드 및 로컬 서버
+작성 기준: 2026.10.29 / 현재 구현된 코드 및 로컬 서버
 
-현재 구현된 회원, 관리자, 영상 업로드·조회, 퀴즈·채점·추천 API를 정리했습니다.
+현재 구현된 회원, 관리자, 영상 업로드·검색·조회·삭제, 좋아요, 퀴즈·채점·추천 API를 정리했습니다.
 
 ## 1. 공통 사항
 
@@ -35,7 +35,7 @@
 | 8 | POST | `/api/video-categories` | 카테고리 추가 | 필요 |
 | 9 | POST | `/api/video-categories/{categoryId}/tags` | 개념 태그 추가 | 필요 |
 | 10 | POST | `/api/videos` | 영상 업로드 | 필요 |
-| 11 | GET | `/api/videos` | 공개 영상 목록 | 불필요 |
+| 11 | GET | `/api/videos` | 공개 영상 목록·제목 검색 | 불필요 |
 | 12 | GET | `/api/users/me/videos` | 내 영상 목록 | 필요 |
 | 13 | GET | `/api/videos/{videoId}` | 영상 상세 | 공개 영상은 불필요 |
 | 14 | GET | `/api/videos/{videoId}/content` | 영상 재생 | 공개 영상은 불필요 |
@@ -44,6 +44,11 @@
 | 17 | GET | `/api/videos/{videoId}/quizzes` | 영상별 퀴즈 조회 | 불필요 |
 | 18 | POST | `/api/quizzes/{quizId}/answer` | 퀴즈 채점·오답 기록 | 필요 |
 | 19 | GET | `/api/videos/{videoId}/recommendations` | 관련 영상 추천 | 필요 |
+| 20 | POST | `/api/videos/{videoId}/views` | 조회 수 증가 | 불필요 |
+| 21 | GET | `/api/videos/{videoId}/like` | 내 좋아요 상태 | 필요 |
+| 22 | PUT | `/api/videos/{videoId}/like` | 좋아요 | 필요 |
+| 23 | DELETE | `/api/videos/{videoId}/like` | 좋아요 취소 | 필요 |
+| 24 | DELETE | `/api/videos/{videoId}` | 내 영상 삭제 | 필요 |
 
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
@@ -428,7 +433,7 @@ DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다.
 | 415 | MP4 확장자·헤더 오류, JPEG 형식·해상도 제한 위반, request Part 등 Content-Type 오류 |
 | 500 | 파일 저장 또는 DB 등록 실패 |
 
-### 11) 공개 영상 목록 — GET /api/videos
+### 11) 공개 영상 목록·검색 — GET /api/videos
 
 인증 불필요. 홈·탐색 화면에서 사용합니다.
 
@@ -438,8 +443,12 @@ DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다.
 | --- | --- | --- | --- | --- |
 | page | integer(int32) | X | 0 | 0 이상. 한 페이지 12개 |
 | categoryId | integer(int32) | X | 없음 | 양수. 생략하면 전체 카테고리 |
+| keyword | string | X | 빈 문자열 | 최대 100자. 제목에 포함된 문자열 검색 |
 
-요청 예: `/api/videos?page=0&categoryId=1`
+요청 예: `/api/videos?page=0&categoryId=1&keyword=SQL`
+
+검색어의 앞뒤 공백을 제거하고 영문 대소문자를 구분하지 않습니다. 생략하거나 공백만 보내면 전체 제목을 조회합니다.
+`%`, `_`, `!`는 검색 패턴이 아닌 문자 그대로 검색하며, 카테고리 필터와 함께 사용할 수 있습니다. 설명·등록자·태그는 검색 대상이 아닙니다.
 
 **Response — 200 OK**
 
@@ -493,7 +502,7 @@ DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
-| 400 | page가 음수, categoryId가 0 이하, 숫자 변환 실패 |
+| 400 | page가 음수, categoryId가 0 이하, 숫자 변환 실패, keyword 100자 초과 |
 
 존재하지 않는 양수 categoryId나 목록 범위를 넘는 page는 오류가 아니라 빈 영상 배열을 반환합니다.
 
@@ -572,7 +581,7 @@ DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다.
 | videoUrl | string | MP4 파일을 요청할 상대 경로 |
 | thumbnailUrl | string 또는 null | 썸네일 상대 경로. 키가 없으면 null |
 
-목록·상세 조회 및 파일 재생만으로 조회 수가 증가하지는 않습니다.
+목록·상세 조회 및 파일 재생 GET 요청만으로 조회 수가 증가하지는 않습니다. 재생 시작 시 20번 조회 수 증가 API를 별도로 호출합니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
@@ -811,4 +820,137 @@ Cookie: JSESSIONID=...
 | 400 | videoId를 정수로 변환할 수 없음, correct를 boolean으로 변환할 수 없음 |
 | 401 | 로그인하지 않았거나 세션 만료, 탈퇴한 회원 |
 | 404 | 기준 영상이 없거나 공개 상태가 아님 |
+
+## 9. 조회 수·좋아요·영상 삭제
+
+담당: 박재성
+
+### 20) 조회 수 증가 — POST /api/videos/{videoId}/views
+
+인증 불필요. 공개 영상만 가능합니다. 요청 본문 없음.
+
+**Request Path**
+
+| 항목 | 타입 | 필수 | 내용 |
+| --- | --- | --- | --- |
+| videoId | integer(int64) | O | 양수인 공개 영상 번호 |
+
+**Response — 200 OK**
+
+```json
+{ "videoId": 20, "viewCount": 1 }
+```
+
+| 필드 | 타입 | 설명 |
+| --- | --- | --- |
+| videoId | integer(int64) | 영상 번호 |
+| viewCount | integer | 증가 후 전체 조회 수 |
+
+호출 한 번당 1 증가합니다. 동일 회원·브라우저의 중복 시청을 구분하지 않습니다.
+프론트에서는 재생이 시작될 때 호출하며, 일시정지 후 재개나 구간 이동마다 반복 호출하지 않도록 연결해야 합니다.
+영상 목록·상세·파일 GET 및 Range 요청은 집계를 증가시키지 않습니다. 이 API가 시청 기록을 저장하는 것은 아닙니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | videoId가 0 이하이거나 정수로 변환할 수 없음 |
+| 404 | 없는 영상, 숨김·삭제 영상, 삭제된 회원의 영상 |
+
+### 21) 내 좋아요 상태 — GET /api/videos/{videoId}/like
+
+세션 로그인 필요. 공개 영상만 가능합니다. 요청 본문 없음.
+
+**Request Path**
+
+| 항목 | 타입 | 필수 | 내용 |
+| --- | --- | --- | --- |
+| videoId | integer(int64) | O | 양수인 공개 영상 번호 |
+
+**Response — 200 OK**
+
+```json
+{ "videoId": 20, "liked": false, "likeCount": 0 }
+```
+
+| 필드 | 타입 | 설명 |
+| --- | --- | --- |
+| videoId | integer(int64) | 영상 번호 |
+| liked | boolean | 로그인한 회원의 좋아요 여부 |
+| likeCount | integer | 영상의 전체 좋아요 수 |
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | videoId 형식·양수 제한 위반 |
+| 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
+| 404 | 없는 영상, 숨김·삭제 영상, 삭제된 회원의 영상 |
+
+### 22) 좋아요 — PUT /api/videos/{videoId}/like
+
+세션 로그인 필요. Path와 오류 조건은 21번과 같으며 요청 본문은 없습니다.
+
+```http
+PUT /api/videos/20/like
+Cookie: JSESSIONID=로그인한_세션값
+```
+
+**Response — 200 OK**
+
+```json
+{ "videoId": 20, "liked": true, "likeCount": 1 }
+```
+
+응답 필드는 21번과 같습니다. 회원 번호는 요청에서 받지 않습니다.
+처음 요청하면 `video_like`에 기록을 추가하고 `video.like_count`를 1 증가시킵니다. 같은 회원이 반복 요청하면 기록·집계가 중복되지 않고 `200`을 반환합니다.
+
+### 23) 좋아요 취소 — DELETE /api/videos/{videoId}/like
+
+세션 로그인 필요. Path와 오류 조건은 21번과 같으며 요청 본문은 없습니다.
+
+**Response — 200 OK**
+
+```json
+{ "videoId": 20, "liked": false, "likeCount": 0 }
+```
+
+응답 필드는 21번과 같습니다. 본인의 좋아요 기록이 있으면 삭제하고 전체 좋아요 수를 1 감소시킵니다.
+이미 취소했거나 좋아요 기록이 없어도 `200`을 반환하며 집계는 줄이지 않습니다. 집계는 0 미만으로 내려가지 않습니다.
+좋아요 기록 변경과 집계는 같은 트랜잭션으로 처리합니다. 영상 행과 해당 좋아요 기록을 잠가 동시 요청의 중복 반영을 막습니다.
+
+테스트 SQL의 좋아요 수는 정렬 확인을 위해 넣은 숫자로 실제 좋아요 기록 수와 다릅니다. 이 API는 기존 집계를 초기화하지 않고 새 요청의 증감만 반영합니다.
+
+### 24) 내 영상 삭제 — DELETE /api/videos/{videoId}
+
+세션 로그인 필요. 영상 작성자만 삭제할 수 있습니다. 관리자도 다른 회원의 영상을 이 API로 삭제할 수 없습니다.
+
+**Request Path**
+
+| 항목 | 타입 | 필수 | 내용 |
+| --- | --- | --- | --- |
+| videoId | integer(int64) | O | 양수인 본인 영상 번호 |
+
+요청 본문 없음. 본인의 공개·숨김 영상 모두 삭제할 수 있습니다.
+
+**Response — 204 No Content**
+
+본문 없음. `video.status`를 `DELETED`로 변경합니다.
+DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·시청 기록은 유지합니다. 파일의 물리 삭제나 복구 API는 포함하지 않습니다.
+삭제한 영상은 공개 목록·검색·내 영상 목록에서 제외되며, 상세·재생·썸네일·퀴즈·추천 요청에서도 접근할 수 없습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | videoId 형식·양수 제한 위반 |
+| 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
+| 403 | 다른 회원이 등록한 영상 |
+| 404 | 없는 영상, 이미 삭제된 영상, 삭제된 회원의 영상 |
+
+### 프론트 연결 항목
+
+이번 변경은 백엔드만 반영했습니다. 화면에서는 다음 호출을 연결해야 합니다.
+
+- 검색: 기존 `GET /api/videos`에 `keyword` 추가
+- 재생 시작: `POST /api/videos/{videoId}/views` 호출
+- 좋아요 표시: 로그인 후 `GET /api/videos/{videoId}/like` 조회
+- 좋아요 버튼: `PUT`, 취소 버튼: `DELETE /api/videos/{videoId}/like`
+- 내 영상 삭제: `DELETE /api/videos/{videoId}` 후 목록 갱신
+
+검색은 Spring Data JPA의 [조회 쿼리](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html), 동시 요청 처리는 [Locking](https://docs.spring.io/spring-data/jpa/reference/jpa/locking.html)을 참고했습니다.
 

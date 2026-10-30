@@ -92,6 +92,22 @@ public class Video extends BaseTimeEntity {
         this.thumbnailKey = thumbnailKey;
     }
 
+    public void increaseViewCount() {
+        viewCount++;
+    }
+
+    public void increaseLikeCount() {
+        likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        likeCount = Math.max(0, likeCount - 1);
+    }
+
+    public void delete() {
+        status = VideoStatus.DELETED;
+    }
+
     @PreUpdate
     void onUpdate() {
         updatedAt = LocalDateTime.now();

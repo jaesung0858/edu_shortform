@@ -6,10 +6,12 @@ import com.team2.edu.video.entity.Category;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,9 +22,16 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             select v from Video v
             where v.status = :status and v.creator.deletedAt is null
               and (:categoryId is null or v.category.id = :categoryId)
+              and lower(v.title) like lower(:keyword) escape '!'
             """)
     Slice<Video> findPublicVideos(@Param("status") VideoStatus status,
-                                 @Param("categoryId") Integer categoryId, Pageable pageable);
+                                 @Param("categoryId") Integer categoryId, @Param("keyword") String keyword,
+                                 Pageable pageable);
+
+    // 좋아요·조회 수·삭제를 같은 영상 단위로 순서대로 처리
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select v from Video v where v.id = :videoId")
+    Optional<Video> findForUpdate(@Param("videoId") Long videoId);
 
     @Query("""
             select distinct v.category from Video v
@@ -50,10 +59,18 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
                                        @Param("publicStatus") VideoStatus publicStatus,
                                        @Param("deleted") VideoStatus deleted);
 
+    /** 학습(퀴즈·추천)에 쓸 수 있는 영상: 공개 상태이고 올린 회원이 탈퇴하지 않은 영상 */
+    @EntityGraph(attributePaths = {"category", "tag"})
+    @Query("""
+            select v from Video v
+            where v.id = :videoId and v.status = :status and v.creator.deletedAt is null
+            """)
+    Optional<Video> findPublicVideo(@Param("videoId") Long videoId, @Param("status") VideoStatus status);
+
     /** 추천 후보: 같은 개념 태그 또는 같은 카테고리, 안 본 영상, 좋아요 순 */
     @Query("""
             select v from Video v
-            where v.status = :status
+            where v.status = :status and v.creator.deletedAt is null
               and v.id <> :videoId
               and (v.tag.id = :tagId or v.category.id = :categoryId)
               and not exists (
@@ -71,7 +88,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     /** 후보가 모자랄 때 채우는 인기 영상 */
     @Query("""
             select v from Video v
-            where v.status = :status
+            where v.status = :status and v.creator.deletedAt is null
               and v.id not in :excludeIds
               and not exists (
                   select 1 from WatchHistory w

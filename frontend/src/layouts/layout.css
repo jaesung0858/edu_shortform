@@ -13,10 +13,15 @@
 .layout-main {
   flex: 1;
   min-width: 0;
+
+  padding: var(--content-padding);
+  background-color: var(--color-background);
 }
 
+
 @media (max-width: 768px) {
-  .layout-body {
-    flex-direction: column;
+  
+  .layout-main {
+    padding: var(--space-md);
   }
 }

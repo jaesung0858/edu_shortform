@@ -1,19 +1,157 @@
+/* 영상 목록 */
+.video-zone {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px 20px;
+  width: 100%;
+}
+.video-list {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+/* 1층: 카테고리 */
+.video-list-top {
+  display: block;
+  width: 100%;
+  margin-bottom: 24px;
+}
+
+/* 영상 카드 */
 .video-list .video {
   display: block;
+  min-width: 0;
+  overflow: hidden;
+
   color: inherit;
+  text-decoration: none;
+
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+
+  box-shadow: 0 2px 10px rgba(8, 6, 13, 0.035);
+
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.video-list .video:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 6px 18px rgba(8, 6, 13, 0.08);
+  transform: translateY(-2px);
+}
+
+.video-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+}
+
+.video-info h3,
+.video-info h4,
+.video-info p {
+  margin: 0;
+}
+
+/* 썸네일 */
+.video-list .video img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+
+  object-fit: cover;
+  background: #111;
+}
+
+/* 제목 */
+.video-list .video h3 {
+  display: -webkit-box;
+  overflow: hidden;
+
+  margin: 14px 14px 8px;
+
+  color: var(--color-text);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.45;
+
+  overflow-wrap: anywhere;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 일반 정보 */
+.video-list .video p {
+  margin: 0;
+  padding: 0 14px;
+
+  color: var(--color-text-sub);
+  font-size: 13px;
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+}
+
+/* 크리에이터 */
+.video-list .video h4 {
+  margin: 10px 14px 4px;
+
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 마지막 카테고리 · 태그에 아래 여백 */
+.video-list .video p:last-child {
+  padding-bottom: 14px;
+}
+
+/* 기존 밑줄 효과 제거 */
+.video-list .video:hover h3 {
   text-decoration: none;
 }
 
-.video-list .video:focus-visible {
-  outline: 3px solid #7581e7;
-  outline-offset: 3px;
+/* 카테고리 내부만 가로 */
+.category-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
 }
 
-.video-list .video:hover h3 {
-  text-decoration: underline;
+.category-bar button {
+  flex-shrink: 0;
 }
 
-.video-list .video img {
-  object-fit: contain;
-  background: #111;
+/* 2층: 영상 */
+.video-list-bottom {
+  display: block;
+  width: 100%;
+}
+
+.video-list {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+}
+
+.video-list-top {
+  display: block !important;
+  width: 100% !important;
+}
+
+.video-list-bottom {
+  display: block !important;
+  width: 100% !important;
+}
+
+.category-bar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }

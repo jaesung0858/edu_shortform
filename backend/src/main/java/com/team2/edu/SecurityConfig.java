@@ -27,6 +27,8 @@ class SecurityConfig {
         
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                //로그인 없어도 조회수 올라가게 설정
+                .requestMatchers(HttpMethod.POST, "/api/videos/*/views").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos", "/api/videos/*", "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")

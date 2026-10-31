@@ -7,7 +7,7 @@ export default function LoginRequired({ message = '로그인이 필요해요' })
   return (
     <div className="lp-login-required" role="alert">
       <p>{message}</p>
-      <button type="button" className="lp-btn lp-btn--primary" onClick={() => navigate('/login')}>
+      <button type="button" className="lp-btn btn-primary" onClick={() => navigate('/login')}>
         로그인하러 가기
       </button>
     </div>

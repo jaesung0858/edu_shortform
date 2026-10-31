@@ -11,7 +11,7 @@ export default function VideoPlayer({ video, onEnded }) {
       {failed ? (
         <div className="lp-video__error">
           <p>영상을 불러오지 못했어요.</p>
-          <button type="button" className="lp-btn lp-btn--primary" onClick={onEnded}>
+          <button type="button" className="lp-btn btn-primary" onClick={onEnded}>
             퀴즈 바로 풀기
           </button>
         </div>

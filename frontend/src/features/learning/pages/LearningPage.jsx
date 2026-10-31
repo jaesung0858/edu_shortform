@@ -102,7 +102,7 @@ export default function LearningPage({ videoId }) {
         {load.status === 'error' && (
           <div className="lp-panel lp-center">
             <p>{load.message ?? '영상을 불러오지 못했어요.'}</p>
-            <Link className="lp-btn lp-btn--primary" to="/learn/1">
+            <Link className="lp-btn btn-primary" to="/learn/1">
               처음 영상으로
             </Link>
           </div>
@@ -145,7 +145,7 @@ export default function LearningPage({ videoId }) {
                 <div className="lp-panel">
                   <h2 className="lp-panel__question">이 영상에는 퀴즈가 없어요</h2>
                   <div className="lp-actions">
-                    <button type="button" className="lp-btn lp-btn--primary" onClick={goNext}>
+                    <button type="button" className="lp-btn btn-primary" onClick={goNext}>
                       다음 영상
                     </button>
                   </div>

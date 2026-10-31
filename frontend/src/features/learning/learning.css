@@ -1,13 +1,22 @@
-/* 학습 화면 전용 스타일. 클래스는 모두 lp- 로 시작해서 공통 스타일과 겹치지 않게 했다. */
+/* 학습 화면 전용 스타일. 클래스는 모두 lp- 로 시작해서 공통 스타일과 겹치지 않게 했다.
+   색·간격은 공통 변수(index.css)를 쓰고, 공통 변수가 아직 없는 브랜치에서도 같은 모양이 되게 기본값을 함께 적었다. */
 .lp-page {
-  --lp-bg: #0f1115;
-  --lp-surface: #1a1d24;
-  --lp-surface-2: #242833;
-  --lp-text: #f2f3f5;
-  --lp-muted: #9aa0ab;
-  --lp-primary: #4f7cff;
+  --lp-bg: var(--color-background, #f8fafc);
+  --lp-surface: var(--color-surface, #ffffff);
+  --lp-text: var(--color-text, #1e293b);
+  --lp-heading: var(--color-secondary, #1e3a5f);
+  --lp-muted: var(--color-text-sub, #64748b);
+  --lp-border: var(--color-border, #e2e8f0);
+  --lp-primary: var(--color-primary, #00aaff);
+  --lp-primary-hover: var(--color-primary-hover, #0095e0);
+  --lp-primary-soft: rgba(0, 170, 255, 0.08);
   --lp-correct: #2fbf71;
-  --lp-wrong: #ff5a5f;
+  --lp-wrong: #ef4444; /* 공통 .btn-danger 색 */
+  --lp-space-xs: var(--space-xs, 4px);
+  --lp-space-sm: var(--space-sm, 8px);
+  --lp-space-md: var(--space-md, 16px);
+  --lp-space-lg: var(--space-lg, 24px);
+  --lp-space-xl: var(--space-xl, 32px);
 
   min-height: 100vh;
   min-height: 100dvh;
@@ -24,20 +33,20 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  padding: 12px var(--lp-space-md);
 }
-.lp-header__title { font-weight: 700; }
+.lp-header__title { font-weight: 700; color: var(--lp-heading); }
 
 .lp-stage {
   width: 100%;
   max-width: 440px;
-  padding: 0 16px 32px;
+  padding: 0 var(--lp-space-md) var(--lp-space-xl);
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--lp-space-md);
 }
 
-/* 세로형 영상 */
+/* 세로형 영상. 재생 영역만 검은 배경을 유지한다. */
 .lp-video {
   position: relative;
   width: 100%;
@@ -45,6 +54,7 @@
   max-height: calc(100dvh - 100px);
   margin: 0 auto;
   background: #000;
+  color: #fff;
   border-radius: 16px;
   overflow: hidden;
 }
@@ -58,11 +68,11 @@
   left: 0;
   right: 0;
   bottom: 56px; /* 기본 컨트롤 바를 가리지 않게 */
-  padding: 16px;
+  padding: var(--lp-space-md);
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
   pointer-events: none;
 }
-.lp-video__title { margin: 6px 0 4px; font-size: 1.15rem; }
+.lp-video__title { margin: 6px 0 4px; font-size: 1.15rem; color: #fff; }
 .lp-video__desc { margin: 0; font-size: 0.9rem; color: #d7dae0; }
 .lp-video__stats { display: flex; gap: 12px; margin: 6px 0 0; font-size: 0.8rem; color: #d7dae0; }
 .lp-video__error {
@@ -76,21 +86,22 @@
 
 .lp-tag {
   display: inline-block;
-  padding: 2px 8px;
+  padding: 2px var(--lp-space-sm);
   border-radius: 999px;
-  background: rgba(79, 124, 255, 0.25);
-  color: #b9c9ff;
+  background: var(--lp-primary);
+  color: #fff;
   font-size: 0.8rem;
 }
 
 /* 퀴즈·결과 패널 */
 .lp-panel {
   background: var(--lp-surface);
+  border: 1px solid var(--lp-border);
   border-radius: 16px;
   padding: 20px;
 }
-.lp-panel__step { margin: 0 0 8px; color: var(--lp-muted); font-size: 0.85rem; }
-.lp-panel__question { margin: 0 0 16px; font-size: 1.1rem; line-height: 1.5; }
+.lp-panel__step { margin: 0 0 var(--lp-space-sm); color: var(--lp-muted); font-size: 0.85rem; }
+.lp-panel__question { margin: 0 0 var(--lp-space-md); font-size: 1.1rem; line-height: 1.5; color: var(--lp-heading); }
 
 .lp-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .lp-option {
@@ -99,19 +110,19 @@
   align-items: center;
   gap: 12px;
   padding: 14px;
-  border: 2px solid transparent;
+  border: 2px solid var(--lp-border);
   border-radius: 12px;
-  background: var(--lp-surface-2);
+  background: var(--lp-surface);
   color: inherit;
   font: inherit;
   text-align: left;
   cursor: pointer;
 }
-.lp-option:hover:not(:disabled):not(.lp-option--static) { border-color: #3a4050; }
-.lp-option.is-selected { border-color: var(--lp-primary); }
+.lp-option:hover:not(:disabled):not(.lp-option--static):not(.is-selected) { background: var(--lp-bg); }
+.lp-option.is-selected { border-color: var(--lp-primary); background: var(--lp-primary-soft); }
 .lp-option--static { cursor: default; }
-.lp-option.is-answer { border-color: var(--lp-correct); background: rgba(47, 191, 113, 0.15); }
-.lp-option.is-wrong { border-color: var(--lp-wrong); background: rgba(255, 90, 95, 0.12); }
+.lp-option.is-answer { border-color: var(--lp-correct); background: rgba(47, 191, 113, 0.12); }
+.lp-option.is-wrong { border-color: var(--lp-wrong); background: rgba(239, 68, 68, 0.1); }
 .lp-option__no {
   flex: none;
   width: 26px;
@@ -119,19 +130,22 @@
   display: grid;
   place-items: center;
   border-radius: 50%;
-  background: #333949;
+  background: var(--lp-border);
   font-size: 0.85rem;
 }
+.lp-option.is-selected .lp-option__no { background: var(--lp-primary); color: #fff; }
+.lp-option.is-answer .lp-option__no { background: var(--lp-correct); color: #fff; }
+.lp-option.is-wrong .lp-option__no { background: var(--lp-wrong); color: #fff; }
 
-.lp-verdict { margin: 0 0 8px; font-size: 1.25rem; font-weight: 700; }
+.lp-verdict { margin: 0 0 var(--lp-space-sm); font-size: 1.25rem; font-weight: 700; }
 .lp-verdict.is-correct, .is-correct { color: var(--lp-correct); }
 .lp-verdict.is-wrong, .is-wrong { color: var(--lp-wrong); }
 
 .lp-explain {
-  margin-top: 16px;
+  margin-top: var(--lp-space-md);
   padding: 14px;
   border-radius: 12px;
-  background: var(--lp-surface-2);
+  background: var(--lp-bg);
 }
 .lp-explain p { margin: 6px 0 0; line-height: 1.5; }
 .lp-explain__note { color: var(--lp-muted); font-size: 0.85rem; }
@@ -139,37 +153,60 @@
 .lp-actions { display: flex; gap: 10px; margin-top: 20px; }
 .lp-actions .lp-btn { flex: 1; }
 
+/* 버튼 색·테두리·여백은 공통 .btn-primary / .btn-secondary 를 따른다.
+   lp-btn 은 링크(<a>)에도 같은 모양이 나오게 배치만 맞춘다. */
 .lp-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 16px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--lp-surface-2);
-  color: var(--lp-text);
+  border-radius: 8px;
   font: inherit;
-  font-weight: 600;
   text-decoration: none;
   cursor: pointer;
 }
 .lp-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.lp-btn--primary { background: var(--lp-primary); color: #fff; }
-.lp-btn--ghost { padding: 6px 12px; background: transparent; color: var(--lp-muted); }
+.lp-btn--ghost { padding: 6px 12px; border: 0; background: transparent; color: var(--lp-muted); }
+.lp-btn--ghost:hover { color: var(--lp-primary); }
+
+/* 공통 버튼 클래스가 아직 없는 브랜치용 대체값. :where()라 우선순위가 0이어서 공통 클래스가 있으면 그쪽이 이긴다. */
+:where(.lp-page .btn-primary) {
+  padding: 10px 16px;
+  background-color: var(--lp-primary);
+  color: #fff;
+  border: 1px solid var(--lp-primary);
+  font-weight: 600;
+}
+:where(.lp-page .btn-primary:hover:not(:disabled)) {
+  background-color: var(--lp-primary-hover);
+  border-color: var(--lp-primary-hover);
+}
+:where(.lp-page .btn-secondary) {
+  padding: 10px 16px;
+  background-color: var(--lp-surface);
+  color: var(--lp-text);
+  border: 1px solid var(--lp-border);
+  font-weight: 500;
+}
+:where(.lp-page .btn-secondary:hover:not(:disabled)) {
+  color: var(--lp-primary);
+  border-color: var(--lp-primary);
+  background-color: var(--lp-bg);
+}
 
 /* 추천 */
-.lp-recommend__title { margin: 4px 0 10px; font-size: 1rem; }
+.lp-recommend__title { margin: var(--lp-space-xs) 0 10px; font-size: 1rem; color: var(--lp-heading); }
 .lp-recommend__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .lp-card {
   display: flex;
   gap: 12px;
   padding: 10px;
+  border: 1px solid var(--lp-border);
   border-radius: 12px;
   background: var(--lp-surface);
   color: inherit;
   text-decoration: none;
 }
-.lp-card:hover { background: var(--lp-surface-2); }
+.lp-card:hover { border-color: var(--lp-primary); }
 .lp-card__thumb {
   flex: none;
   width: 54px;
@@ -177,12 +214,13 @@
   display: grid;
   place-items: center;
   border-radius: 8px;
-  background: linear-gradient(160deg, #4f7cff, #8a5cff);
+  background: linear-gradient(160deg, var(--lp-primary), var(--lp-heading));
+  color: #fff;
   overflow: hidden;
 }
 .lp-card__thumb img { width: 100%; height: 100%; object-fit: cover; }
 .lp-card__body { display: flex; flex-direction: column; justify-content: center; gap: 2px; min-width: 0; }
-.lp-card__reason { color: #b9c9ff; font-size: 0.8rem; }
+.lp-card__reason { color: var(--lp-primary); font-size: 0.8rem; font-weight: 600; }
 .lp-card__title { font-weight: 600; }
 
 /* 요약 */
@@ -191,15 +229,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 14px 4px;
+  padding: 14px var(--lp-space-xs);
   border-radius: 12px;
-  background: var(--lp-surface-2);
+  background: var(--lp-bg);
 }
-.lp-stat__value { font-size: 1.6rem; font-weight: 700; }
+.lp-stat__value { font-size: 1.6rem; font-weight: 700; color: var(--lp-heading); }
 .lp-stat__label { color: var(--lp-muted); font-size: 0.85rem; }
-.lp-rate { margin: 16px 0 8px; font-weight: 700; text-align: center; }
-.lp-history { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.lp-history__item { display: flex; gap: 10px; padding: 10px; border-radius: 10px; background: var(--lp-surface-2); }
+.lp-rate { margin: var(--lp-space-md) 0 var(--lp-space-sm); font-weight: 700; text-align: center; }
+.lp-history { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--lp-space-sm); }
+.lp-history__item { display: flex; gap: 10px; padding: 10px; border-radius: 10px; background: var(--lp-bg); }
 .lp-history__item p { margin: 0; }
 .lp-history__q { line-height: 1.4; }
 
@@ -212,6 +250,7 @@
   align-items: center;
   gap: 12px;
   padding: 20px;
+  border: 1px solid var(--lp-border);
   border-radius: 16px;
   background: var(--lp-surface);
   text-align: center;

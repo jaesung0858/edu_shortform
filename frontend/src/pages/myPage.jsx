@@ -70,7 +70,7 @@ function MyPage(){
                 <button className="profile-edit">
                     정보 수정
                 </button>
-                <button className="profile-delete">
+                <button className="btn-danger">
                     회원 탈퇴
                 </button>
             </div>

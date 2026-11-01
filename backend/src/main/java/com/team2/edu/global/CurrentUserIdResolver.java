@@ -1,7 +1,11 @@
 package com.team2.edu.global;
 
+import com.team2.edu.user.repository.UserRepository;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -10,12 +14,17 @@ import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * TODO 로그인 연동 후: 헤더 대신 로그인 세션에서 회원 번호를 꺼내도록 이 클래스만 바꾸면 된다.
+ * @CurrentUserId 파라미터에 로그인한 회원 번호를 넣는다.
+ * 세션에는 이메일만 들어 있어서 이메일로 회원을 찾는다. 로그인하지 않았거나 탈퇴한 회원이면 401.
  */
 @Component
 class CurrentUserIdResolver implements HandlerMethodArgumentResolver {
 
-    static final String HEADER = "X-User-Id";
+    private final UserRepository userRepository;
+
+    CurrentUserIdResolver(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -26,14 +35,14 @@ class CurrentUserIdResolver implements HandlerMethodArgumentResolver {
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer,
                                   NativeWebRequest webRequest, WebDataBinderFactory binderFactory) {
-        String value = webRequest.getHeader(HEADER);
-        if (value == null || value.isBlank()) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, HEADER + " 헤더가 필요합니다");
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || authentication instanceof AnonymousAuthenticationToken) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다.");
         }
-        try {
-            return Long.valueOf(value);
-        } catch (NumberFormatException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, HEADER + " 값이 숫자가 아닙니다");
-        }
+        return userRepository.findByEmail(authentication.getName())
+                .filter(user -> !user.isDeleted())
+                .map(user -> user.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
     }
 }

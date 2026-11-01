@@ -52,7 +52,7 @@ export async function getQuizzes(videoId) {
 }
 
 /**
- * 채점. POST /api/quizzes/{quizId}/answer { selectedNo(1~4) }
+ * 채점. 로그인 필요(세션). POST /api/quizzes/{quizId}/answer { selectedNo(1~4) }
  * → { correct, answerNo, explanation, tagName, addedToWrongNote }
  */
 export async function submitAnswer(quizId, selectedNo) {
@@ -75,7 +75,7 @@ export async function submitAnswer(quizId, selectedNo) {
 
 /**
  * 결과 화면의 추천 영상. GET /api/videos/{videoId}/recommendations?correct=
- * → [{ videoId, title, thumbnailKey, likeCount, reason }]
+ * 로그인 필요(세션). → [{ videoId, title, thumbnailUrl, likeCount, reason }]
  */
 export async function getRecommendations(videoId, correct = true) {
   if (USE_MOCK) {
@@ -92,7 +92,7 @@ export async function getRecommendations(videoId, correct = true) {
       .map((v) => ({
         videoId: v.videoId,
         title: v.title,
-        thumbnailKey: v.thumbnailUrl,
+        thumbnailUrl: v.thumbnailUrl,
         likeCount: v.likeCount,
         reason: sameTag(v) ? `'${v.tagName}' 한 번 더 복습` : `다음으로 배워볼 '${v.tagName}'`,
       }))

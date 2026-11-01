@@ -1,6 +1,6 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.10.24 / 현재 구현된 코드 및 로컬 서버
+작성 기준: 2026.10.28 / 현재 구현된 코드 및 로컬 서버
 
 현재 구현된 회원, 관리자, 영상 업로드·조회, 퀴즈·채점·추천 API를 정리했습니다.
 
@@ -13,13 +13,11 @@
 | 일반 요청·응답 | `application/json` |
 | 로그인 요청 | `application/x-www-form-urlencoded` |
 | 업로드 요청 | `multipart/form-data` |
-| 회원·관리자·영상 인증 | 로그인 세션 쿠키 `JSESSIONID` |
-| 퀴즈 채점·추천 회원 식별 | 임시 헤더 `X-User-Id`. 로그인 세션과 아직 연결되지 않음 |
+| 인증 | 로그인 세션 쿠키 `JSESSIONID` (회원·관리자·영상·퀴즈 채점·추천 공통) |
 | 권한 | 일반 회원 `USER`, 관리자 `ADMIN` |
 | 날짜 형식 | `2026-10-24T12:00:00` 형태. `createdAt`에는 시간대 정보가 포함되지 않음 |
 
-로그인 후 같은 세션 쿠키로 요청합니다. 회원 번호나 `X-User-Id` 헤더로 업로더를 지정하지 않습니다.
-퀴즈 채점·추천은 별도로 `X-User-Id` 헤더를 보내야 하며, 로그인한 상태라도 헤더를 생략할 수 없습니다. 이 헤더는 인증된 로그인 정보를 대신하는 임시 테스트 방식입니다.
+로그인 후 같은 세션 쿠키로 요청합니다. 업로더·풀이 회원·추천 대상 회원은 모두 로그인 정보로 정하며, 요청에서 회원 번호를 받지 않습니다.
 본문이 없는 조회 요청에는 `Content-Type`이 필요하지 않습니다. JSON 응답을 받으려면 `Accept: application/json`을 사용합니다.
 이 문서의 번호·파일명·날짜는 예시이며, 실제 값은 등록 결과에 따라 달라집니다.
 
@@ -44,8 +42,8 @@
 | 15 | GET | `/api/videos/{videoId}/thumbnail` | 썸네일 조회 | 공개 영상은 불필요 |
 | 16 | GET | `/health` | 서버 상태 확인 | 불필요 |
 | 17 | GET | `/api/videos/{videoId}/quizzes` | 영상별 퀴즈 조회 | 불필요 |
-| 18 | POST | `/api/quizzes/{quizId}/answer` | 퀴즈 채점·오답 기록 | X-User-Id 필수 |
-| 19 | GET | `/api/videos/{videoId}/recommendations` | 관련 영상 추천 | X-User-Id 필수 |
+| 18 | POST | `/api/quizzes/{quizId}/answer` | 퀴즈 채점·오답 기록 | 필요 |
+| 19 | GET | `/api/videos/{videoId}/recommendations` | 관련 영상 추천 | 필요 |
 
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
@@ -75,7 +73,7 @@
 | HTTP 코드 | 의미 | 대표 발생 조건 |
 | --- | --- | --- |
 | 400 | Bad Request | 필수값 누락, 길이·범위 위반, 잘못된 JSON·숫자 |
-| 401 | Unauthorized | 로그인 필요, 세션 만료, 로그인 실패, 학습 API의 회원 식별 헤더 누락 |
+| 401 | Unauthorized | 로그인 필요, 세션 만료, 로그인 실패 |
 | 403 | Forbidden | 로그인했지만 관리자 권한 없음 |
 | 404 | Not Found | 대상 없음, 접근할 수 없는 영상, 저장 파일 없음 |
 | 409 | Conflict | 이메일·닉네임·분류 이름 중복 |
@@ -662,7 +660,7 @@ JSON 응답이 아닙니다. 썸네일이 없는 영상은 기본 이미지를 �
 
 ### 17) 영상별 퀴즈 조회 — GET /api/videos/{videoId}/quizzes
 
-인증 불필요. `X-User-Id`도 필요하지 않습니다. 요청 본문 없음.
+인증 불필요. 요청 본문 없음.
 
 **Request Path**
 
@@ -696,28 +694,28 @@ JSON 응답이 아닙니다. 썸네일이 없는 영상은 기본 이미지를 �
 | options | array of string | 1번부터 4번까지 순서대로 담은 보기 |
 
 퀴즈 번호 오름차순으로 반환하며 정답·해설은 포함하지 않습니다. 첫 번째 보기를 선택했을 때 채점 요청의 `selectedNo`는 `1`입니다.
-해당 영상에 퀴즈가 없으면 `[]`를 반환합니다. 현재 영상 자체의 존재·공개 상태를 별도로 검사하지 않으므로, 없는 영상 번호도 `404`가 아닌 `200`과 빈 배열을 반환합니다.
+해당 영상에 퀴즈가 없으면 `[]`를 반환합니다. 영상이 없거나 공개 상태가 아니면(숨김·삭제, 업로더 탈퇴) `404`를 반환합니다. 영상 상세 API와 같은 기준입니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
 | 400 | videoId를 정수로 변환할 수 없음 |
+| 404 | 영상이 없거나 공개 상태가 아님 |
 
 ### 18) 퀴즈 채점·오답 기록 — POST /api/quizzes/{quizId}/answer
 
-요청 `application/json`. 세션 로그인 대신 현재는 `X-User-Id` 헤더로 풀이 회원을 지정합니다.
+요청 `application/json`. 로그인 필요. 풀이 기록은 로그인한 회원 기준으로 저장합니다.
 
 **Request**
 
 | 위치 | 항목 | 타입 | 필수 | 내용 |
 | --- | --- | --- | --- | --- |
-| Header | X-User-Id | integer(int64) | O | 풀이 기록을 저장할 기존 회원 번호. 테스트 SQL의 학습자는 `2` |
 | Path | quizId | integer(int64) | O | 채점할 기존 퀴즈 번호 |
 | Body | selectedNo | integer | O | 선택한 보기 번호, `1`~`4` |
 
 ```http
 POST /api/quizzes/1/answer
 Content-Type: application/json
-X-User-Id: 2
+Cookie: JSESSIONID=...
 
 { "selectedNo": 2 }
 ```
@@ -749,9 +747,9 @@ X-User-Id: 2
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
-| 400 | selectedNo 누락·null·1~4 범위 위반, quizId 또는 X-User-Id를 정수로 변환할 수 없음 |
-| 401 | X-User-Id 헤더 누락 또는 공백 |
-| 404 | 회원이 없거나 삭제됨, 퀴즈가 없음 |
+| 400 | selectedNo 누락·null·1~4 범위 위반, quizId를 정수로 변환할 수 없음 |
+| 401 | 로그인하지 않았거나 세션 만료, 탈퇴한 회원 |
+| 404 | 퀴즈가 없음, 퀴즈의 영상이 공개 상태가 아님 |
 
 ## 8. 영상 추천
 
@@ -759,19 +757,18 @@ X-User-Id: 2
 
 ### 19) 관련 영상 추천 — GET /api/videos/{videoId}/recommendations
 
-요청 본문 없음. 세션 로그인 대신 현재는 `X-User-Id` 헤더로 추천 대상 회원을 지정합니다.
+요청 본문 없음. 로그인 필요. 로그인한 회원의 시청 기록을 기준으로 추천합니다.
 
 **Request**
 
 | 위치 | 항목 | 타입 | 필수 | 기본값 | 내용 |
 | --- | --- | --- | --- | --- | --- |
-| Header | X-User-Id | integer(int64) | O | 없음 | 시청 기록을 기준으로 추천할 회원 번호 |
 | Path | videoId | integer(int64) | O | 없음 | 추천의 기준이 되는 영상 번호 |
 | Query | correct | boolean | X | true | 직전 퀴즈 정답 여부. `true` 또는 `false` 사용 |
 
 ```http
 GET /api/videos/1/recommendations?correct=false
-X-User-Id: 2
+Cookie: JSESSIONID=...
 ```
 
 **Response — 200 OK**
@@ -781,7 +778,7 @@ X-User-Id: 2
   {
     "videoId": 2,
     "title": "INNER JOIN과 LEFT JOIN",
-    "thumbnailKey": "thumbnails/2.jpg",
+    "thumbnailUrl": "/api/videos/2/thumbnail",
     "likeCount": 95,
     "reason": "틀린 개념 다시 보기"
   }
@@ -792,11 +789,11 @@ X-User-Id: 2
 | --- | --- | --- |
 | videoId | integer(int64) | 추천 영상 번호 |
 | title | string | 영상 제목 |
-| thumbnailKey | string 또는 null | DB에 저장된 썸네일 키. 목록 API의 thumbnailUrl과 다른 필드 |
+| thumbnailUrl | string 또는 null | 썸네일 조회 주소. 썸네일이 없으면 null (영상 목록·상세 API와 같은 규칙) |
 | likeCount | integer | 저장된 좋아요 수 |
 | reason | string | 추천 이유 |
 
-최대 3개를 반환하며 후보가 부족하면 더 적거나 `[]`일 수 있습니다. 기준 영상과 해당 회원의 시청 기록에 있는 영상은 추천에서 제외하며, 공개 영상 중에서 선택합니다.
+최대 3개를 반환하며 후보가 부족하면 더 적거나 `[]`일 수 있습니다. 기준 영상과 해당 회원의 시청 기록에 있는 영상은 추천에서 제외하며, 공개 영상 중 업로더가 탈퇴하지 않은 영상에서 선택합니다.
 
 | correct | 우선 추천 | reason 예시 |
 | --- | --- | --- |
@@ -807,14 +804,11 @@ X-User-Id: 2
 관련 후보를 좋아요 수 내림차순·영상 번호 내림차순으로 최대 50개 조회한 뒤 개념 우선순위를 적용합니다. 이 안에서 최대 3개를 고르고, 모자라면 인기 영상으로 보충합니다.
 현재 `correct`는 서버가 최근 채점 기록에서 가져오는 값이 아니라 요청자가 전달하는 값입니다.
 
-`thumbnailKey` 자체를 재생 화면의 URL로 사용하지 않습니다. 새 영상의 썸네일은 `/api/videos/{videoId}/thumbnail`로 조회합니다. 기존 샘플의 키가 있어도 실제 파일이 없으면 썸네일 조회가 실패할 수 있습니다.
+테스트 SQL로 넣은 샘플 영상은 썸네일 키만 있고 실제 파일이 없어, `thumbnailUrl`로 조회하면 실패할 수 있습니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
-| 400 | videoId 또는 X-User-Id를 정수로 변환할 수 없음, correct를 boolean으로 변환할 수 없음 |
-| 401 | X-User-Id 헤더 누락 또는 공백 |
-| 404 | 기준 영상이 없음 |
-
-현재 추천 API는 회원 존재 여부를 별도로 확인하지 않습니다. 따라서 없는 회원 번호만으로 `404`를 반환하지는 않습니다.
-기준 영상의 공개 상태와 추천 영상 업로더의 삭제 여부도 일반 영상 조회 API와 동일하게 검사하는 구조는 아직 아닙니다.
+| 400 | videoId를 정수로 변환할 수 없음, correct를 boolean으로 변환할 수 없음 |
+| 401 | 로그인하지 않았거나 세션 만료, 탈퇴한 회원 |
+| 404 | 기준 영상이 없거나 공개 상태가 아님 |
 

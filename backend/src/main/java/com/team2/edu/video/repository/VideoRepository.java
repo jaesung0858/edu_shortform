@@ -50,10 +50,18 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
                                        @Param("publicStatus") VideoStatus publicStatus,
                                        @Param("deleted") VideoStatus deleted);
 
+    /** 학습(퀴즈·추천)에 쓸 수 있는 영상: 공개 상태이고 올린 회원이 탈퇴하지 않은 영상 */
+    @EntityGraph(attributePaths = {"category", "tag"})
+    @Query("""
+            select v from Video v
+            where v.id = :videoId and v.status = :status and v.creator.deletedAt is null
+            """)
+    Optional<Video> findPublicVideo(@Param("videoId") Long videoId, @Param("status") VideoStatus status);
+
     /** 추천 후보: 같은 개념 태그 또는 같은 카테고리, 안 본 영상, 좋아요 순 */
     @Query("""
             select v from Video v
-            where v.status = :status
+            where v.status = :status and v.creator.deletedAt is null
               and v.id <> :videoId
               and (v.tag.id = :tagId or v.category.id = :categoryId)
               and not exists (
@@ -71,7 +79,7 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     /** 후보가 모자랄 때 채우는 인기 영상 */
     @Query("""
             select v from Video v
-            where v.status = :status
+            where v.status = :status and v.creator.deletedAt is null
               and v.id not in :excludeIds
               and not exists (
                   select 1 from WatchHistory w

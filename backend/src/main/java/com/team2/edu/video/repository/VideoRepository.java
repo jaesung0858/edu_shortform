@@ -6,10 +6,12 @@ import com.team2.edu.video.entity.Category;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -20,9 +22,16 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
             select v from Video v
             where v.status = :status and v.creator.deletedAt is null
               and (:categoryId is null or v.category.id = :categoryId)
+              and lower(v.title) like lower(:keyword) escape '!'
             """)
     Slice<Video> findPublicVideos(@Param("status") VideoStatus status,
-                                 @Param("categoryId") Integer categoryId, Pageable pageable);
+                                 @Param("categoryId") Integer categoryId, @Param("keyword") String keyword,
+                                 Pageable pageable);
+
+    // 좋아요·조회 수·삭제를 같은 영상 단위로 순서대로 처리
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select v from Video v where v.id = :videoId")
+    Optional<Video> findForUpdate(@Param("videoId") Long videoId);
 
     @Query("""
             select distinct v.category from Video v

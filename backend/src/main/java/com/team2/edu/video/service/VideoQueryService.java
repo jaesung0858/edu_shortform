@@ -33,9 +33,10 @@ public class VideoQueryService {
 
     // 공개 영상을 최신 등록순으로 조회
     @Transactional(readOnly = true)
-    public VideoListResponse findAll(int page, Integer categoryId) {
+    public VideoListResponse findAll(int page, Integer categoryId, String keyword) {
         var pageable = PageRequest.of(page, 12, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        var videos = videoRepository.findPublicVideos(VideoStatus.PUBLIC, categoryId, pageable);
+        String pattern = "%" + keyword.strip().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
+        var videos = videoRepository.findPublicVideos(VideoStatus.PUBLIC, categoryId, pattern, pageable);
         var categories = videoRepository.findPublicCategories(VideoStatus.PUBLIC).stream()
                 .map(category -> new VideoListResponse.CategoryOption(category.getId(), category.getName()))
                 .toList();

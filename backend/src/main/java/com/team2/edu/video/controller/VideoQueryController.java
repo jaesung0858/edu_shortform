@@ -6,6 +6,7 @@ import com.team2.edu.video.service.VideoQueryService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import org.springframework.core.io.Resource;
 import org.springframework.http.CacheControl;
 import org.springframework.http.MediaType;
@@ -25,11 +26,12 @@ public class VideoQueryController {
         this.queryService = queryService;
     }
 
-    @Operation(summary = "공개 영상 목록", description = "최신 등록순으로 12개씩 조회합니다. page는 0부터 시작하며 카테고리로 필터할 수 있습니다.")
+    @Operation(summary = "공개 영상 목록·검색", description = "제목에 keyword가 포함된 공개 영상을 최신순으로 12개씩 조회합니다. page는 0부터 시작합니다.")
     @GetMapping("/api/videos")
     public VideoListResponse videos(@RequestParam(defaultValue = "0") @Min(0) int page,
-                                    @RequestParam(required = false) @Positive Integer categoryId) {
-        return queryService.findAll(page, categoryId);
+                                    @RequestParam(required = false) @Positive Integer categoryId,
+                                    @RequestParam(defaultValue = "") @Size(max = 100) String keyword) {
+        return queryService.findAll(page, categoryId, keyword);
     }
 
     @Operation(summary = "내 영상 목록", description = "로그인한 회원의 공개·숨김 영상을 최신 등록순으로 12개씩 조회합니다.")

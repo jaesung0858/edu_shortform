@@ -31,6 +31,7 @@ export default function App() {
           )}
         />
         <Route path="/myPage" element={<MyPage user={user} />} />
+        <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
       </Route>

@@ -64,10 +64,10 @@ export default function SummaryPage() {
           )}
 
           <div className="lp-actions">
-            <button type="button" className="lp-btn" onClick={() => navigate(-1)}>
+            <button type="button" className="lp-btn btn-secondary" onClick={() => navigate(-1)}>
               이어서 학습
             </button>
-            <button type="button" className="lp-btn lp-btn--primary" onClick={startOver}>
+            <button type="button" className="lp-btn btn-primary" onClick={startOver}>
               처음부터 다시
             </button>
           </div>

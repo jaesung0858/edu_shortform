@@ -1,15 +1,4 @@
-.category {
-    display:flex;
-    gap: 20px;
-    align-items:center;
-    flex-wrap: wrap;
-}
 
-.video-zone {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 20px;
-}
 
 .video {
     width: 100%;

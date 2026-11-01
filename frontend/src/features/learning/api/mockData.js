@@ -13,14 +13,14 @@ const SAMPLE_VIDEOS = [
 const sample = (i) => SAMPLE_VIDEOS[i % SAMPLE_VIDEOS.length]
 
 export const mockVideos = [
-  { videoId: 1, tagName: 'SQL JOIN', title: 'SQL JOIN 기초', description: '두 테이블을 합치는 가장 기본 방법', likeCount: 120 },
-  { videoId: 2, tagName: 'SQL JOIN', title: 'INNER JOIN vs LEFT JOIN 그림으로', description: '두 JOIN의 차이를 벤 다이어그램으로 정리해요', likeCount: 95 },
-  { videoId: 3, tagName: 'SQL JOIN', title: 'JOIN 실습: 주문·고객 테이블', description: '주문이 없는 고객까지 조회해 보기', likeCount: 60 },
-  { videoId: 4, tagName: '인덱스', title: '인덱스는 왜 빠를까', description: '인덱스가 조회를 빠르게 만드는 원리와 단점', likeCount: 150 },
-  { videoId: 5, tagName: '서브쿼리', title: '서브쿼리 입문', description: '쿼리 안에 쿼리를 넣는 법', likeCount: 80 },
-  { videoId: 6, tagName: 'VLOOKUP', title: 'VLOOKUP 1분 정리', description: '엑셀 실무 필수 함수 VLOOKUP', likeCount: 200 },
-  { videoId: 7, tagName: '피벗 테이블', title: '피벗 테이블로 월별 매출 요약', description: '클릭 몇 번으로 월별 합계 만들기', likeCount: 170 },
-  { videoId: 8, tagName: 'VLOOKUP', title: 'VLOOKUP #N/A 오류 해결', description: '#N/A가 뜨는 가장 흔한 이유', likeCount: 40 },
+  { videoId: 1, viewCount: 1200, tagName: 'SQL JOIN', title: 'SQL JOIN 기초', description: '두 테이블을 합치는 가장 기본 방법', likeCount: 120 },
+  { videoId: 2, viewCount: 900, tagName: 'SQL JOIN', title: 'INNER JOIN vs LEFT JOIN 그림으로', description: '두 JOIN의 차이를 벤 다이어그램으로 정리해요', likeCount: 95 },
+  { videoId: 3, viewCount: 500, tagName: 'SQL JOIN', title: 'JOIN 실습: 주문·고객 테이블', description: '주문이 없는 고객까지 조회해 보기', likeCount: 60 },
+  { videoId: 4, viewCount: 1500, tagName: '인덱스', title: '인덱스는 왜 빠를까', description: '인덱스가 조회를 빠르게 만드는 원리와 단점', likeCount: 150 },
+  { videoId: 5, viewCount: 700, tagName: '서브쿼리', title: '서브쿼리 입문', description: '쿼리 안에 쿼리를 넣는 법', likeCount: 80 },
+  { videoId: 6, viewCount: 2500, tagName: 'VLOOKUP', title: 'VLOOKUP 1분 정리', description: '엑셀 실무 필수 함수 VLOOKUP', likeCount: 200 },
+  { videoId: 7, viewCount: 1800, tagName: '피벗 테이블', title: '피벗 테이블로 월별 매출 요약', description: '클릭 몇 번으로 월별 합계 만들기', likeCount: 170 },
+  { videoId: 8, viewCount: 300, tagName: 'VLOOKUP', title: 'VLOOKUP #N/A 오류 해결', description: '#N/A가 뜨는 가장 흔한 이유', likeCount: 40 },
 ].map((video, i) => ({ ...video, videoUrl: sample(i), thumbnailUrl: null }))
 
 // answerNo·explanation은 서버에만 있는 값. 화면에는 채점 응답으로만 내려간다.

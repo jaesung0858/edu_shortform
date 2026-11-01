@@ -44,7 +44,6 @@ export default function App() {
         <Route index element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home user={user} />} />
         <Route path="/explore" element={<Explore />} />
-        <Route path="/myChannel" element={<MyChannel />} />
         <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />

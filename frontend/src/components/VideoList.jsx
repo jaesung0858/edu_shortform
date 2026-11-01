@@ -39,31 +39,66 @@ export default function VideoList({ showCategories = false, mine = false }) {
   }
 
   return (
-    <div className="video-list">
-      {showCategories && <div className="category" aria-label="영상 카테고리" >
-        <button type="button" aria-pressed={categoryId === ''} disabled={list.loading} onClick={() => selectCategory('')}>전체</button>
+
+  <div className="video-list">
+    <div className='vidoe-list-top'>
+    {showCategories && (
+      <div className="category-bar">
+        <button
+          type="button"
+          aria-pressed={categoryId === ''}
+          disabled={list.loading}
+          onClick={() => selectCategory('')}
+        >
+          전체
+        </button>
+
         {list.categories.map(category => (
-          <button key={category.categoryId} type="button" disabled={list.loading}
-            aria-pressed={categoryId === String(category.categoryId)} onClick={() => selectCategory(String(category.categoryId))}>
+          <button
+            key={category.categoryId}
+            type="button"
+            disabled={list.loading}
+            aria-pressed={categoryId === String(category.categoryId)}
+            onClick={() => selectCategory(String(category.categoryId))}
+          >
             {category.name}
           </button>
         ))}
-      </div>}
+      </div>
+    )}
+    </div>
+
+    <div className='video-list-bottom'>
+    <div className="video-content">
       <div className="video-zone">
         {list.videos.map(video => (
-          <Link className="video" key={video.videoId} to={`/videos/${video.videoId}`}>
-            <img src={video.thumbnailUrl || thumbnail} alt={`${video.title} 썸네일`} loading="lazy"
+          <Link
+            className="video"
+            key={video.videoId}
+            to={`/videos/${video.videoId}`}
+          >
+            <img
+              src={video.thumbnailUrl || thumbnail}
+              alt={`${video.title} 썸네일`}
+              loading="lazy"
               onError={event => {
-                if (event.currentTarget.getAttribute('src') !== thumbnail) event.currentTarget.src = thumbnail
-              }} />
-            <h3>{video.title}</h3>
-            <p>조회수: {video.viewCount}</p><p>좋아요: {video.likeCount}</p>
-            <h4>{video.creatorNickname}</h4>
-            <p>{video.categoryName} · {video.tagName}</p>
+                if (event.currentTarget.getAttribute('src') !== thumbnail) {
+                  event.currentTarget.src = thumbnail
+                }
+              }}
+            />
+
+            <div className="video-info">
+              <h3>{video.title}</h3>
+              <h4>{video.creatorNickname}</h4>
+              <p>{video.categoryName} · {video.tagName}</p>
+              <p>조회수 {video.viewCount} · 좋아요 {video.likeCount}</p>
+            </div>
             {mine && video.status === 'HIDDEN' && <p>숨김 영상</p>}
           </Link>
         ))}
       </div>
+    </div>
       {list.loading && <p role="status">영상 목록을 불러오고 있습니다.</p>}
       {list.error && <div role="alert">
         <p>{list.error}</p>
@@ -78,5 +113,6 @@ export default function VideoList({ showCategories = false, mine = false }) {
         setPage(value => value + 1)
       }}>더 보기</button>}
     </div>
+  </div>
   )
 }

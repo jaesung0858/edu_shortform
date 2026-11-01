@@ -28,6 +28,7 @@ class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                 //로그인 없어도 조회수 올라가게 설정
+
                 .requestMatchers(HttpMethod.POST, "/api/videos/*/views").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/videos", "/api/videos/*", "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers(HttpMethod.HEAD, "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
@@ -36,11 +37,8 @@ class SecurityConfig {
                         "/health", "/error",
                         "/swagger-ui/**", "/v3/api-docs/**"
                 ).permitAll()
-                .requestMatchers(
-                        "/api/videos/*/quizzes",
-                        "/api/quizzes/*/answer",
-                        "/api/videos/*/recommendations"
-                ).permitAll()
+                // 퀴즈 문항은 누구나 볼 수 있다. 채점·추천은 로그인 회원 기준이라 아래 authenticated()로 막힌다
+                .requestMatchers(HttpMethod.GET, "/api/videos/*/quizzes").permitAll()
                 .anyRequest().authenticated()
         ).formLogin(form -> form
                 .loginProcessingUrl("/api/login")

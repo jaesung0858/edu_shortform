@@ -31,12 +31,12 @@ export default function QuizCard({ quiz, index, total, submitting, onSubmit, onR
       </ol>
 
       <div className="lp-actions">
-        <button type="button" className="lp-btn" onClick={onRewatch} disabled={submitting}>
+        <button type="button" className="lp-btn btn-secondary" onClick={onRewatch} disabled={submitting}>
           영상 다시 보기
         </button>
         <button
           type="button"
-          className="lp-btn lp-btn--primary"
+          className="lp-btn btn-primary"
           onClick={() => onSubmit(selectedNo)}
           disabled={selectedNo == null || submitting}
         >

@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { getNextVideoId, getQuizzes, getVideo, submitAnswer } from '../api/learningApi'
+import { getNextVideoId, getQuizzes, getVideo, isLoginRequired, submitAnswer } from '../api/learningApi'
 import { markWatched, recordAnswer } from '../store/learningSession'
+import LoginRequired from '../components/LoginRequired'
 import QuizCard from '../components/QuizCard'
 import QuizResult from '../components/QuizResult'
 import RecommendList from '../components/RecommendList'
 import VideoPlayer from '../components/VideoPlayer'
 import '../learning.css'
+
+// error 상태에 이 값이 들어오면 문구 대신 로그인 안내를 보여준다.
+const LOGIN_REQUIRED = 'login'
 
 // /learn/:videoId — 영상이 바뀌면 key로 화면 상태를 통째로 초기화한다.
 export function LearningRoute() {
@@ -52,8 +56,8 @@ export default function LearningPage({ videoId }) {
       recordAnswer({ quizId: quiz.quizId, question: quiz.question, videoTitle: video.title, correct: response.correct })
       setResult({ ...response, selectedNo })
       setPhase('result')
-    } catch {
-      setError('채점에 실패했어요. 다시 시도해 주세요.')
+    } catch (e) {
+      setError(isLoginRequired(e) ? LOGIN_REQUIRED : '채점에 실패했어요. 다시 시도해 주세요.')
     } finally {
       setSubmitting(false)
     }
@@ -66,14 +70,19 @@ export default function LearningPage({ videoId }) {
   }
 
   async function goNext() {
+    setError(null)
     if (!isLastQuiz) {
       setQuizIndex((i) => i + 1)
       setResult(null)
       setPhase('quiz')
       return
     }
-    const nextId = await getNextVideoId(videoId)
-    navigate(nextId ? `/learn/${nextId}` : '/learn/summary')
+    try {
+      const nextId = await getNextVideoId(videoId)
+      navigate(nextId ? `/learn/${nextId}` : '/learn/summary')
+    } catch {
+      setError('다음 영상을 불러오지 못했어요. 다시 시도해 주세요.')
+    }
   }
 
   return (
@@ -93,7 +102,7 @@ export default function LearningPage({ videoId }) {
         {load.status === 'error' && (
           <div className="lp-panel lp-center">
             <p>{load.message ?? '영상을 불러오지 못했어요.'}</p>
-            <Link className="lp-btn lp-btn--primary" to="/learn/1">
+            <Link className="lp-btn btn-primary" to="/learn/1">
               처음 영상으로
             </Link>
           </div>
@@ -114,7 +123,6 @@ export default function LearningPage({ videoId }) {
                   onSubmit={handleSubmit}
                   onRewatch={() => setPhase('watching')}
                 />
-                {error && <p className="lp-error">{error}</p>}
               </>
             )}
 
@@ -137,13 +145,19 @@ export default function LearningPage({ videoId }) {
                 <div className="lp-panel">
                   <h2 className="lp-panel__question">이 영상에는 퀴즈가 없어요</h2>
                   <div className="lp-actions">
-                    <button type="button" className="lp-btn lp-btn--primary" onClick={goNext}>
+                    <button type="button" className="lp-btn btn-primary" onClick={goNext}>
                       다음 영상
                     </button>
                   </div>
                 </div>
                 <RecommendList videoId={videoId} correct />
               </>
+            )}
+
+            {error === LOGIN_REQUIRED ? (
+              <LoginRequired message="로그인이 필요해요. 로그인하면 채점 결과와 오답 노트가 저장돼요." />
+            ) : (
+              error && <p className="lp-error">{error}</p>
             )}
           </>
         )}

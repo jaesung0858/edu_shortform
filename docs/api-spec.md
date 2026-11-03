@@ -1,6 +1,6 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.10.29 / 현재 구현된 코드 및 로컬 서버
+작성 기준: 2026.11.03 / 현재 구현된 코드 및 로컬 서버
 
 현재 구현된 회원, 관리자, 영상 업로드·검색·조회·삭제, 좋아요, 퀴즈·채점·추천 API를 정리했습니다.
 
@@ -388,6 +388,11 @@ username=member%40example.com&password=Example123%21
 | categoryId | integer(int32) | O | 양수, DB에 존재하는 카테고리 |
 | tagId | integer(int32) | O | 양수, 선택한 카테고리에 속하는 개념 태그 |
 | durationSec | integer(int32) | O | 재생 길이(초), 1 이상 |
+| quizzes | array | X | 함께 등록할 퀴즈, 최대 2문항. 생략·null·빈 배열이면 퀴즈 없이 등록 |
+| quizzes[].question | string | O | 공백만 입력 불가, 최대 500자 |
+| quizzes[].options | string[] | O | 보기 정확히 4개(순서대로 1~4번), 각 보기 공백만 입력 불가·최대 200자 |
+| quizzes[].answerNo | integer | O | 정답 보기 번호 1~4 |
+| quizzes[].explanation | string | X | 해설, 최대 1,000자 |
 
 ```json
 {
@@ -395,7 +400,15 @@ username=member%40example.com&password=Example123%21
   "description": "INNER JOIN의 기본 개념을 설명합니다.",
   "categoryId": 1,
   "tagId": 1,
-  "durationSec": 33
+  "durationSec": 33,
+  "quizzes": [
+    {
+      "question": "INNER JOIN 결과에 포함되는 행은?",
+      "options": ["양쪽 모두 일치하는 행", "왼쪽 테이블 전체", "오른쪽 테이블 전체", "모든 조합"],
+      "answerNo": 1,
+      "explanation": "INNER JOIN은 조인 조건이 양쪽에서 일치하는 행만 남깁니다."
+    }
+  ]
 }
 ```
 
@@ -422,11 +435,12 @@ username=member%40example.com&password=Example123%21
 | videoKey | string | UUID로 생성한 저장 파일명. 재생 URL은 아님 |
 
 업로더는 로그인 회원이며, 새 영상의 상태는 `PUBLIC`입니다. 썸네일 없이 등록할 수도 있습니다.
+퀴즈는 영상과 같은 트랜잭션에 저장하며, 퀴즈의 개념 태그는 영상의 `tagId`를 그대로 씁니다. 문제·보기·해설의 앞뒤 공백은 제거하고 빈 해설은 null로 저장합니다.
 DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다. 정리 실패 시에는 서버 로그를 남깁니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
-| 400 | file·request 누락, 빈 파일·썸네일, 필수값·길이·양수 제한 위반, 카테고리와 태그 불일치 |
+| 400 | file·request 누락, 빈 파일·썸네일, 필수값·길이·양수 제한 위반, 카테고리와 태그 불일치, 퀴즈 3문항 이상·보기 4개 아님·정답 번호 1~4 밖 |
 | 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
 | 404 | 카테고리 또는 개념 태그가 없음 |
 | 413 | 영상 100MB, 썸네일 1MB 또는 전체 요청 102MB 초과 |

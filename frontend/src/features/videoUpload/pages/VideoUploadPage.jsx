@@ -245,6 +245,12 @@ export default function VideoUploadPage() {
       categoryId: Number(categoryId),
       tagId: Number(tagId),
       durationSec,
+      quizzes: quizzes.map((quiz) => ({
+        question: quiz.question.trim(),
+        options: quiz.options.map((option) => option.trim()),
+        answerNo: quiz.answerNo,
+        explanation: quiz.explanation.trim() || null,
+      })),
     }
 
     try {

@@ -1,5 +1,7 @@
 package com.team2.edu.video.service;
 
+import com.team2.edu.quiz.entity.Quiz;
+import com.team2.edu.quiz.repository.QuizRepository;
 import com.team2.edu.user.entity.User;
 import com.team2.edu.user.repository.UserRepository;
 import com.team2.edu.video.dto.VideoUploadRequest;
@@ -37,15 +39,17 @@ public class VideoUploadService {
     private final ConceptTagRepository conceptTagRepository;
     private final VideoRepository videoRepository;
     private final VideoStorageService storageService;
+    private final QuizRepository quizRepository;
 
     public VideoUploadService(UserRepository userRepository, CategoryRepository categoryRepository,
                               ConceptTagRepository conceptTagRepository, VideoRepository videoRepository,
-                              VideoStorageService storageService) {
+                              VideoStorageService storageService, QuizRepository quizRepository) {
         this.userRepository = userRepository;
         this.categoryRepository = categoryRepository;
         this.conceptTagRepository = conceptTagRepository;
         this.videoRepository = videoRepository;
         this.storageService = storageService;
+        this.quizRepository = quizRepository;
     }
 
     // 카테고리별 개념 태그 조회
@@ -116,6 +120,13 @@ public class VideoUploadService {
                 request.description(), videoKey, request.durationSec());
         video.attachThumbnail(thumbnailKey);
         videoRepository.saveAndFlush(video);
+        // 퀴즈도 같은 트랜잭션에 저장해서 실패하면 영상과 함께 롤백
+        quizRepository.saveAll(request.quizzes().stream()
+                .map(quiz -> new Quiz(video, quiz.question().strip(),
+                        quiz.options().stream().map(String::strip).toList(),
+                        quiz.answerNo(), quiz.explanation() == null || quiz.explanation().isBlank()
+                                ? null : quiz.explanation().strip()))
+                .toList());
         return new VideoUploadResponse(video.getId(), video.getTitle(), video.getVideoKey());
     }
 

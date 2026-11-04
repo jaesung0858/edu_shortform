@@ -1,10 +1,13 @@
 package com.team2.edu.video.dto;
 
+import com.team2.edu.quiz.dto.QuizCreateRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
+import java.util.List;
 
 public record VideoUploadRequest(
         @NotBlank @Size(max = 100)
@@ -25,6 +28,19 @@ public record VideoUploadRequest(
 
         @NotNull @Positive
         @Schema(description = "재생 길이(초)", example = "60")
-        Integer durationSec
+        Integer durationSec,
+
+        @Size(max = 2)
+        @Schema(description = "함께 등록할 퀴즈(최대 2문항). 생략하면 퀴즈 없이 등록")
+        List<@NotNull @Valid QuizCreateRequest> quizzes
 ) {
+
+    public VideoUploadRequest {
+        quizzes = quizzes == null ? List.of() : quizzes;
+    }
+
+    public VideoUploadRequest(String title, String description, Integer categoryId, Integer tagId,
+                              Integer durationSec) {
+        this(title, description, categoryId, tagId, durationSec, List.of());
+    }
 }

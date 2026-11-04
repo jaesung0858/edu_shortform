@@ -50,6 +50,28 @@ class VideoUploadControllerTests {
     }
 
     @Test
+    void rejectsInvalidQuizzes() throws Exception {
+        String quiz = """
+                {"question":"문제","options":["a","b","c","d"],"answerNo":1}""";
+        String[] invalid = {
+                "[" + quiz + "," + quiz + "," + quiz + "]",                      // 3문항
+                "[" + quiz.replace("\"answerNo\":1", "\"answerNo\":5") + "]",   // 정답 번호 범위 밖
+                "[" + quiz.replace("\"d\"]", "]") + "]",                          // 보기 3개
+                "[" + quiz.replace("\"b\"", "\" \"") + "]",                       // 빈 보기
+                "[" + quiz.replace("\"문제\"", "\"\"") + "]",                       // 빈 문제
+                "[null]"
+        };
+        for (String quizzes : invalid) {
+            mvc.perform(multipart("/api/videos")
+                            .file(new MockMultipartFile("file", "lesson.mp4", "video/mp4", new byte[]{1}))
+                            .file(metadataWithQuizzes(quizzes))
+                            .principal(UsernamePasswordAuthenticationToken.authenticated("learner@example.com", null, List.of())))
+                    .andExpect(status().isBadRequest());
+        }
+        verifyNoInteractions(service);
+    }
+
+    @Test
     void rejectsMissingVideoFile() throws Exception {
         mvc.perform(multipart("/api/videos").file(metadata("SQL JOIN", "60")))
                 .andExpect(status().isBadRequest());
@@ -84,6 +106,13 @@ class VideoUploadControllerTests {
         String json = """
                 {"title":"%s","categoryId":1,"tagId":1,"durationSec":%s}
                 """.formatted(title, duration);
+        return new MockMultipartFile("request", "", "application/json", json.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private MockMultipartFile metadataWithQuizzes(String quizzes) {
+        String json = """
+                {"title":"SQL JOIN","categoryId":1,"tagId":1,"durationSec":60,"quizzes":%s}
+                """.formatted(quizzes);
         return new MockMultipartFile("request", "", "application/json", json.getBytes(StandardCharsets.UTF_8));
     }
 }

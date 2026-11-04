@@ -65,6 +65,15 @@ export async function getQuizzes(videoId) {
 }
 
 /**
+ * 재생 시작 시 조회 수 증가. POST /api/videos/{videoId}/views
+ * 로그인 상태면 서버가 시청 기록도 남겨서, 추천에서 이미 본 영상이 빠진다.
+ */
+export async function addView(videoId) {
+  if (USE_MOCK) return
+  await httpClient.post(`/api/videos/${videoId}/views`)
+}
+
+/**
  * 채점. 로그인 필요(세션). POST /api/quizzes/{quizId}/answer { selectedNo(1~4) }
  * → { correct, answerNo, explanation, tagName, addedToWrongNote }
  */

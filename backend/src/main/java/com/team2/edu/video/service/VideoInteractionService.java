@@ -10,6 +10,7 @@ import com.team2.edu.video.entity.VideoLike;
 import com.team2.edu.video.entity.VideoStatus;
 import com.team2.edu.video.repository.VideoLikeRepository;
 import com.team2.edu.video.repository.VideoRepository;
+import com.team2.edu.video.repository.WatchHistoryRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,19 +22,25 @@ public class VideoInteractionService {
     private final VideoRepository videoRepository;
     private final VideoLikeRepository likeRepository;
     private final UserRepository userRepository;
+    private final WatchHistoryRepository watchHistoryRepository;
 
     public VideoInteractionService(VideoRepository videoRepository, VideoLikeRepository likeRepository,
-                                   UserRepository userRepository) {
+                                   UserRepository userRepository, WatchHistoryRepository watchHistoryRepository) {
         this.videoRepository = videoRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
+        this.watchHistoryRepository = watchHistoryRepository;
     }
 
-    // 호출 한 번당 공개 영상의 조회 수 1 증가
+    // 호출 한 번당 공개 영상의 조회 수 1 증가. 로그인 회원이면 시청 기록도 남긴다 (추천에서 본 영상 제외용)
     @Transactional
-    public VideoViewResponse addView(Long videoId) {
+    public VideoViewResponse addView(Long videoId, String email) {
         Video video = publicVideoForUpdate(videoId);
         video.increaseViewCount();
+        if (email != null) {
+            userRepository.findByEmail(email).filter(user -> !user.isDeleted())
+                    .ifPresent(user -> watchHistoryRepository.record(user.getId(), videoId));
+        }
         return new VideoViewResponse(videoId, video.getViewCount());
     }
 

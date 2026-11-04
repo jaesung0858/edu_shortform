@@ -10,6 +10,7 @@ import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
+import AdminUser from './pages/adminUser'
 import './App.css'
 
 export default function App() {
@@ -44,10 +45,13 @@ export default function App() {
           </RequireAuth>
         )}
       />
+      <Route path="/admin/users" element={<AdminUser />} />
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />
+      
       <Route path="*" element={<Navigate to="/home" replace />} />
+      
     </Routes>
   )
 }

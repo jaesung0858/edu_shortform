@@ -34,9 +34,7 @@ public class VideoQueryService {
     // 공개 영상을 최신 등록순으로 조회
     @Transactional(readOnly = true)
     public VideoListResponse findAll(int page, Integer categoryId, String keyword) {
-        var pageable = PageRequest.of(page, 12, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        String pattern = "%" + keyword.strip().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
-        var videos = videoRepository.findPublicVideos(VideoStatus.PUBLIC, categoryId, pattern, pageable);
+        var videos = videoRepository.findPublicVideos(VideoStatus.PUBLIC, categoryId, titlePattern(keyword), pageRequest(page));
         var categories = videoRepository.findPublicCategories(VideoStatus.PUBLIC).stream()
                 .map(category -> new VideoListResponse.CategoryOption(category.getId(), category.getName()))
                 .toList();
@@ -48,14 +46,29 @@ public class VideoQueryService {
     public VideoListResponse findMine(String email, int page) {
         userRepository.findByEmail(email).filter(user -> !user.isDeleted())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
-        var pageable = PageRequest.of(page, 12, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
-        var videos = videoRepository.findMyVideos(email, VideoStatus.DELETED, pageable);
+        var videos = videoRepository.findMyVideos(email, VideoStatus.DELETED, pageRequest(page));
         return new VideoListResponse(toItems(videos), List.of(), videos.hasNext());
     }
 
     @Transactional(readOnly = true)
+    public VideoListResponse findForAdmin(int page, String keyword) {
+        var videos = videoRepository.findForAdmin(VideoStatus.DELETED, titlePattern(keyword), pageRequest(page));
+        return new VideoListResponse(toItems(videos), List.of(), videos.hasNext());
+    }
+
+    @Transactional(readOnly = true)
+    public VideoDetailResponse detailForAdmin(Long videoId) {
+        var video = videoRepository.findById(videoId).filter(item -> item.getStatus() != VideoStatus.DELETED)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+        return toDetail(video);
+    }
+
+    @Transactional(readOnly = true)
     public VideoDetailResponse detail(Long videoId, String email) {
-        Video video = accessibleVideo(videoId, email);
+        return toDetail(accessibleVideo(videoId, email));
+    }
+
+    static VideoDetailResponse toDetail(Video video) {
         return new VideoDetailResponse(video.getId(), video.getTitle(), video.getDescription(),
                 video.getCreator().getNickname(), video.getCategory().getName(), video.getTag().getName(),
                 video.getViewCount(), video.getLikeCount(), video.getDurationSec(), video.getStatus().name(),
@@ -76,8 +89,16 @@ public class VideoQueryService {
         return storageService.load(video.getThumbnailKey());
     }
 
-    private String thumbnailUrl(Video video) {
+    private static String thumbnailUrl(Video video) {
         return StringUtils.hasText(video.getThumbnailKey()) ? "/api/videos/" + video.getId() + "/thumbnail" : null;
+    }
+
+    private static PageRequest pageRequest(int page) {
+        return PageRequest.of(page, 12, Sort.by(Sort.Direction.DESC, "createdAt", "id"));
+    }
+
+    private static String titlePattern(String keyword) {
+        return "%" + keyword.strip().replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%";
     }
 
     private Video accessibleVideo(Long videoId, String email) {

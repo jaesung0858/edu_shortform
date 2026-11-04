@@ -108,6 +108,12 @@ public class Video extends BaseTimeEntity {
         status = VideoStatus.DELETED;
     }
 
+    public void updateMetadata(String title, String description, VideoStatus status) {
+        if (title != null) this.title = title.strip();
+        if (description != null) this.description = description;
+        if (status != null) this.status = status;
+    }
+
     @PreUpdate
     void onUpdate() {
         updatedAt = LocalDateTime.now();

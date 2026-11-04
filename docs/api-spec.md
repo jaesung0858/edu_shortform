@@ -1,6 +1,6 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.10.29 / 현재 구현된 코드 및 로컬 서버
+작성 기준: 2026.11.05 / 현재 구현된 코드 기준
 
 현재 구현된 회원, 관리자, 영상 업로드·검색·조회·삭제, 좋아요, 퀴즈·채점·추천 API를 정리했습니다.
 
@@ -49,6 +49,13 @@
 | 22 | PUT | `/api/videos/{videoId}/like` | 좋아요 | 필요 |
 | 23 | DELETE | `/api/videos/{videoId}/like` | 좋아요 취소 | 필요 |
 | 24 | DELETE | `/api/videos/{videoId}` | 내 영상 삭제 | 필요 |
+| 25 | GET | `/api/admin/users/{userId}` | 회원 상세 조회 | ADMIN |
+| 26 | PATCH | `/api/admin/users/{userId}` | 회원 닉네임 수정 | ADMIN |
+| 27 | DELETE | `/api/admin/users/{userId}` | 회원 삭제 | ADMIN |
+| 28 | GET | `/api/admin/videos` | 영상 목록·제목 검색 | ADMIN |
+| 29 | GET | `/api/admin/videos/{videoId}` | 영상 상세 조회 | ADMIN |
+| 30 | PATCH | `/api/admin/videos/{videoId}` | 영상 정보·공개 상태 수정 | ADMIN |
+| 31 | DELETE | `/api/admin/videos/{videoId}` | 영상 삭제 | ADMIN |
 
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
@@ -953,4 +960,115 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 - 내 영상 삭제: `DELETE /api/videos/{videoId}` 후 목록 갱신
 
 검색은 Spring Data JPA의 [조회 쿼리](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html), 동시 요청 처리는 [Locking](https://docs.spring.io/spring-data/jpa/reference/jpa/locking.html)을 참고했습니다.
+
+## 10. 관리자 회원·영상 관리
+
+아래 API는 관리자 로그인 세션이 필요합니다. 미로그인은 `401`, 일반 회원은 `403`입니다. `userId`, `videoId`는 양의 정수입니다.
+
+### 25) 회원 상세 조회 — GET /api/admin/users/{userId}
+
+본문 없이 회원 번호를 전달합니다. 삭제되지 않은 회원만 조회합니다.
+
+**Response — 200 OK**
+
+```json
+{
+  "userId": 4,
+  "email": "member@example.com",
+  "nickname": "학습회원",
+  "role": "USER",
+  "createdAt": "2026-11-05T12:00:00"
+}
+```
+
+응답 필드는 6번 회원 목록의 항목과 같습니다. 비밀번호는 반환하지 않습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 회원 번호가 양의 정수가 아님 |
+| 404 | 회원이 없거나 이미 삭제됨 |
+
+### 26) 회원 닉네임 수정 — PATCH /api/admin/users/{userId}
+
+`application/json` 본문을 전달합니다. `nickname`은 필수이며 최대 30자입니다. 공백만 입력할 수 없고, 앞뒤 공백은 제거합니다.
+
+```json
+{ "nickname": "새 닉네임" }
+```
+
+**Response — 200 OK**: 변경 후 회원 정보를 25번과 같은 형식으로 반환합니다.
+
+수정 범위는 닉네임입니다. 로그인 이메일, 비밀번호, 관리자 권한은 변경하지 않습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 회원 번호 또는 닉네임 입력 오류 |
+| 404 | 회원이 없거나 이미 삭제됨 |
+| 409 | 다른 회원과 닉네임 중복. 삭제된 계정의 닉네임도 예약됨 |
+
+### 27) 회원 삭제 — DELETE /api/admin/users/{userId}
+
+요청 본문 없음. **Response — 204 No Content**.
+
+일반 회원의 `users.deleted_at`에 삭제 시각을 기록합니다. 신규 로그인은 실패하고, 기존 세션은 다음 API 요청에서 종료됩니다. 해당 회원의 영상은 일반 목록·재생에서 제외되며 DB의 영상과 학습 기록은 유지됩니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 회원 번호가 양의 정수가 아님 |
+| 403 | 관리자 계정을 삭제하려는 요청 |
+| 404 | 회원이 없거나 이미 삭제됨 |
+
+### 28) 영상 목록·검색 — GET /api/admin/videos
+
+| 쿼리 항목 | 타입 | 기본값 | 내용 |
+| --- | --- | --- | --- |
+| page | integer | 0 | 0부터 시작. 페이지당 12개 |
+| keyword | string | 빈 문자열 | 제목 부분 검색, 최대 100자 |
+
+**Response — 200 OK**: 11번 공개 영상 목록과 같은 구조입니다. `videos`에는 `PUBLIC`·`HIDDEN` 영상이 포함되고, `categories`는 빈 배열입니다. 등록 시각이 최신인 영상부터 조회합니다. 삭제 회원의 영상도 관리 대상으로 조회할 수 있습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | page가 음수·정수가 아님 또는 keyword가 100자 초과 |
+
+### 29) 영상 상세 조회 — GET /api/admin/videos/{videoId}
+
+요청 본문 없음. **Response — 200 OK**: 13번 영상 상세와 같은 필드를 반환합니다. 숨김 영상과 삭제 회원의 영상도 정보를 조회할 수 있습니다. 영상 파일·썸네일 요청에는 기존 접근 정책이 적용됩니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 영상 번호가 양의 정수가 아님 |
+| 404 | 영상이 없거나 이미 삭제됨 |
+
+### 30) 영상 정보 수정 — PATCH /api/admin/videos/{videoId}
+
+`application/json` 본문에 바꿀 필드만 전달합니다. 최소 하나가 필요하며, 생략하거나 `null`을 보낸 필드는 유지됩니다.
+
+| 필드 | 타입 | 내용 |
+| --- | --- | --- |
+| title | string | 최대 100자. 공백만 입력 불가 |
+| description | string | 최대 1,000자. 빈 문자열로 설명 지우기 |
+| status | string | `PUBLIC` 또는 `HIDDEN` |
+
+```json
+{ "title": "수정한 영상 제목", "description": "새 설명", "status": "HIDDEN" }
+```
+
+**Response — 200 OK**: 변경 후 영상 정보를 29번과 같은 형식으로 반환합니다. 영상 파일·썸네일·카테고리·개념 태그·퀴즈는 변경하지 않습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 영상 번호·입력값 오류, 수정할 필드 없음, 허용하지 않은 상태 |
+| 404 | 영상이 없거나 이미 삭제됨 |
+
+### 31) 영상 삭제 — DELETE /api/admin/videos/{videoId}
+
+요청 본문 없음. **Response — 204 No Content**.
+
+작성자와 관계없이 영상 상태를 `DELETED`로 변경합니다. 파일과 연결 기록은 유지합니다. 삭제 영상은 관리자 목록과 일반 목록·재생·학습에서도 제외됩니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 영상 번호가 양의 정수가 아님 |
+| 404 | 영상이 없거나 이미 삭제됨 |
 

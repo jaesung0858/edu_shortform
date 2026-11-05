@@ -29,8 +29,8 @@ function Header({ user, loading, onLogout, loggingOut }) {
         </>
       ) : (
         <button
-          type="button-secondary"
-          className="header-login"
+          type="button"
+          className="btn-secondary"
           onClick={() => navigate('/login')}
         >
           로그인

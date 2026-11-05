@@ -75,7 +75,8 @@ export default function VideoList({ showCategories = false, mine = false }) {
           <Link
             className="video"
             key={video.videoId}
-            to={`/videos/${video.videoId}`}
+            // 숨김 영상은 학습 API가 막으므로 작성자용 상세 페이지로 보낸다
+            to={video.status === 'HIDDEN' ? `/videos/${video.videoId}` : `/learn/${video.videoId}`}
           >
             <img
               src={video.thumbnailUrl || thumbnail}

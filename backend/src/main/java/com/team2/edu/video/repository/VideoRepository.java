@@ -28,6 +28,14 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
                                  @Param("categoryId") Integer categoryId, @Param("keyword") String keyword,
                                  Pageable pageable);
 
+    @EntityGraph(attributePaths = {"creator", "category", "tag"})
+    @Query("""
+            select v from Video v where v.status <> :deleted
+              and lower(v.title) like lower(:keyword) escape '!'
+            """)
+    Slice<Video> findForAdmin(@Param("deleted") VideoStatus deleted, @Param("keyword") String keyword,
+                             Pageable pageable);
+
     // 좋아요·조회 수·삭제를 같은 영상 단위로 순서대로 처리
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select v from Video v where v.id = :videoId")

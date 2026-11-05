@@ -14,6 +14,7 @@ import com.team2.edu.video.entity.VideoStatus;
 import com.team2.edu.video.repository.CategoryRepository;
 import com.team2.edu.video.repository.ConceptTagRepository;
 import com.team2.edu.video.repository.VideoLikeRepository;
+import com.team2.edu.video.repository.WatchHistoryRepository;
 import com.team2.edu.video.repository.VideoRepository;
 import com.team2.edu.video.service.VideoInteractionService;
 import com.team2.edu.video.service.VideoStorageService;
@@ -60,6 +61,7 @@ class VideoInteractionIntegrationTests {
     @Autowired ConceptTagRepository tags;
     @Autowired VideoRepository videos;
     @Autowired VideoLikeRepository likes;
+    @Autowired WatchHistoryRepository watchHistories;
     @Autowired QuizRepository quizzes;
     @Autowired QuizAttemptRepository attempts;
     @Autowired VideoInteractionService interactions;
@@ -109,6 +111,49 @@ class VideoInteractionIntegrationTests {
                     .andExpect(jsonPath("$.viewCount").value(i));
         }
         mvc.perform(get(path)).andExpect(jsonPath("$.viewCount").value(2));
+    }
+
+    @Test
+    void memberViewsAreRecordedOnceAndSkippedInRecommendations() throws Exception {
+        var learner = member();
+        var current = video(member());
+        var watched = videos.saveAndFlush(new Video(current.getCreator(), current.getCategory(), current.getTag(),
+                "watched", "", "missing.mp4", 30));
+        var unwatched = videos.saveAndFlush(new Video(current.getCreator(), current.getCategory(), current.getTag(),
+                "unwatched", "", "missing.mp4", 30));
+        var id = new UserVideoId(learner.getId(), watched.getId());
+
+        // 비로그인 시청은 조회 수만 오르고 기록은 남지 않는다
+        mvc.perform(post("/api/videos/" + watched.getId() + "/views")).andExpect(status().isOk());
+        assertThat(watchHistories.existsById(id)).isFalse();
+
+        // 같은 영상을 두 번 봐도 기록은 한 행이고, 조회 수는 요청마다 오른다
+        for (int i = 0; i < 2; i++) {
+            mvc.perform(post("/api/videos/" + watched.getId() + "/views").session(session(learner)))
+                    .andExpect(status().isOk());
+        }
+        entityManager.clear();
+        assertThat(watchHistories.findAll()).filteredOn(h -> h.getId().equals(id)).hasSize(1);
+        assertThat(videos.findById(watched.getId()).orElseThrow().getViewCount()).isEqualTo(3);
+
+        mvc.perform(get("/api/videos/" + current.getId() + "/recommendations")
+                        .param("correct", "false").session(session(learner)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].videoId", not(hasItem(watched.getId().intValue()))))
+                .andExpect(jsonPath("$[*].videoId", hasItem(unwatched.getId().intValue())));
+    }
+
+    @Test
+    void deletedMemberViewCountsWithoutHistory() throws Exception {
+        var learner = member();
+        var video = video(member());
+        var session = session(learner);
+        ReflectionTestUtils.setField(learner, "deletedAt", LocalDateTime.now());
+        users.saveAndFlush(learner);
+
+        mvc.perform(post("/api/videos/" + video.getId() + "/views").session(session))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.viewCount").value(1));
+        assertThat(watchHistories.existsById(new UserVideoId(learner.getId(), video.getId()))).isFalse();
     }
 
     @Test
@@ -217,17 +262,20 @@ class VideoInteractionIntegrationTests {
                 assertThat(likes.existsById(new UserVideoId(fixture.userId(), fixture.videoId()))).isTrue();
             });
             runConcurrently(fixture, () -> interactions.unlike(fixture.videoId(), fixture.email()));
-            runConcurrently(fixture, () -> interactions.addView(fixture.videoId()));
+            runConcurrently(fixture, () -> interactions.addView(fixture.videoId(), fixture.email()));
             transactions.executeWithoutResult(status -> {
                 var video = videos.findById(fixture.videoId()).orElseThrow();
                 assertThat(video.getLikeCount()).isZero();
                 assertThat(video.getViewCount()).isEqualTo(4);
+                assertThat(watchHistories.existsById(new UserVideoId(fixture.userId(), fixture.videoId()))).isTrue();
                 assertThat(likes.existsById(new UserVideoId(fixture.userId(), fixture.videoId()))).isFalse();
             });
         } finally {
             transactions.executeWithoutResult(status -> {
                 likes.findById(new UserVideoId(fixture.userId(), fixture.videoId())).ifPresent(likes::delete);
                 likes.flush();
+                watchHistories.findById(new UserVideoId(fixture.userId(), fixture.videoId())).ifPresent(watchHistories::delete);
+                watchHistories.flush();
                 videos.deleteById(fixture.videoId());
                 videos.flush();
                 tags.deleteById(fixture.tagId());

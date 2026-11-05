@@ -2,6 +2,8 @@ package com.team2.edu.video.service;
 
 import com.team2.edu.user.entity.User;
 import com.team2.edu.user.repository.UserRepository;
+import com.team2.edu.video.dto.AdminVideoUpdateRequest;
+import com.team2.edu.video.dto.VideoDetailResponse;
 import com.team2.edu.video.dto.VideoLikeResponse;
 import com.team2.edu.video.dto.VideoViewResponse;
 import com.team2.edu.video.entity.UserVideoId;
@@ -10,6 +12,7 @@ import com.team2.edu.video.entity.VideoLike;
 import com.team2.edu.video.entity.VideoStatus;
 import com.team2.edu.video.repository.VideoLikeRepository;
 import com.team2.edu.video.repository.VideoRepository;
+import com.team2.edu.video.repository.WatchHistoryRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,19 +24,25 @@ public class VideoInteractionService {
     private final VideoRepository videoRepository;
     private final VideoLikeRepository likeRepository;
     private final UserRepository userRepository;
+    private final WatchHistoryRepository watchHistoryRepository;
 
     public VideoInteractionService(VideoRepository videoRepository, VideoLikeRepository likeRepository,
-                                   UserRepository userRepository) {
+                                   UserRepository userRepository, WatchHistoryRepository watchHistoryRepository) {
         this.videoRepository = videoRepository;
         this.likeRepository = likeRepository;
         this.userRepository = userRepository;
+        this.watchHistoryRepository = watchHistoryRepository;
     }
 
-    // 호출 한 번당 공개 영상의 조회 수 1 증가
+    // 호출 한 번당 공개 영상의 조회 수 1 증가. 로그인 회원이면 시청 기록도 남긴다 (추천에서 본 영상 제외용)
     @Transactional
-    public VideoViewResponse addView(Long videoId) {
+    public VideoViewResponse addView(Long videoId, String email) {
         Video video = publicVideoForUpdate(videoId);
         video.increaseViewCount();
+        if (email != null) {
+            userRepository.findByEmail(email).filter(user -> !user.isDeleted())
+                    .ifPresent(user -> watchHistoryRepository.record(user.getId(), videoId));
+        }
         return new VideoViewResponse(videoId, video.getViewCount());
     }
 
@@ -74,13 +83,38 @@ public class VideoInteractionService {
     @Transactional
     public void delete(Long videoId, String email) {
         User user = activeUser(email);
-        Video video = videoRepository.findForUpdate(videoId)
-                .filter(item -> item.getStatus() != VideoStatus.DELETED && !item.getCreator().isDeleted())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+        Video video = nonDeletedVideoForUpdate(videoId);
+        if (video.getCreator().isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
         if (!video.getCreator().getId().equals(user.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 삭제할 수 있습니다.");
         }
         video.delete();
+    }
+
+    @Transactional
+    public VideoDetailResponse updateAsAdmin(Long videoId, AdminVideoUpdateRequest request) {
+        if (request.title() == null && request.description() == null && request.status() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정할 항목이 필요합니다.");
+        }
+        if (request.title() != null && request.title().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "제목을 입력해주세요.");
+        }
+        Video video = nonDeletedVideoForUpdate(videoId);
+        VideoStatus status = request.status() == null ? null : VideoStatus.valueOf(request.status());
+        video.updateMetadata(request.title(), request.description(), status);
+        return VideoQueryService.toDetail(video);
+    }
+
+    @Transactional
+    public void deleteAsAdmin(Long videoId) {
+        nonDeletedVideoForUpdate(videoId).delete();
+    }
+
+    private Video nonDeletedVideoForUpdate(Long videoId) {
+        return videoRepository.findForUpdate(videoId).filter(video -> video.getStatus() != VideoStatus.DELETED)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
     }
 
     private Video publicVideoForUpdate(Long videoId) {

@@ -6,6 +6,8 @@ export default function AdminSidebar() {
   return (
     <aside className="site-sidebar" aria-label="\uAD00\uB9AC\uC790 \uBA54\uB274">
       <nav>
+        <NavLink to='/admin/users'end
+        className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>회원관리</NavLink>
         <NavLink
           to="/admin/videos"
           end

@@ -30,10 +30,12 @@ export default function LoginPage({ onNavigate }) {
         setMessage('로그인했지만 세션을 확인하지 못했습니다. 다시 시도해주세요.')
         return
       }
+      const requestedPath = location.state?.from?.pathname
       const postLoginPath = getPostLoginPath(location.state?.from)
-      const destination = user.role === 'ADMIN' && postLoginPath === '/myChannel'
-        ? '/admin/videos'
-        : postLoginPath
+      let destination = postLoginPath
+      if (user.role === 'ADMIN') {
+        destination = requestedPath === '/admin/videos' ? '/admin/videos' : '/admin/users'
+      }
       navigate(destination, { replace: true })
     } catch (error) {
       setMessage(error.response?.status === 401

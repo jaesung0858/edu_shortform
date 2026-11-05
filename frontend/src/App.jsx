@@ -6,12 +6,13 @@ import { LearningRoute, SummaryPage } from './features/learning'
 import { VideoUploadPage } from './features/videoUpload'
 import { LoginFeature } from './features/login'
 import Layout from './layouts/layout'
-import AdminSidebar from './components/adminSidebar'
+import AdminLayout from './layouts/adminLayout'
 import Home from './pages/home'
 import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
+import AdminUser from './pages/adminUser'
 import AdminVideos from './pages/adminVideos'
 import './App.css'
 
@@ -34,24 +35,24 @@ export default function App() {
           )}
         />
         <Route path="/myPage" element={<MyPage user={user} />} />
-        <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
+        <Route path="/learn/summary" element={<SummaryPage />} />
+        <Route
+          path="/learn/:videoId"
+          element={(
+            <RequireAuth>
+              <LearningRoute />
+            </RequireAuth>
+          )}
+        />
       </Route>
       <Route element={<RequireAdmin />}>
-        <Route element={<Layout sidebar={<AdminSidebar />} />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin/users" element={<AdminUser />} />
           <Route path="/admin/videos" element={<AdminVideos />} />
         </Route>
       </Route>
-      <Route path="/learn/summary" element={<SummaryPage />} />
-      <Route
-        path="/learn/:videoId"
-        element={(
-          <RequireAuth>
-            <LearningRoute />
-          </RequireAuth>
-        )}
-      />
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />

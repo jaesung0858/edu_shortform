@@ -1,4 +1,5 @@
 /* 학습 화면 전용 스타일. 클래스는 모두 lp- 로 시작해서 공통 스타일과 겹치지 않게 했다.
+   공통 레이아웃의 .layout h2 / h3 / p 규칙보다 앞서야 하는 글자 규칙은 .lp-page 아래에 둔다.
    색·간격은 공통 변수(index.css)를 쓰고, 공통 변수가 아직 없는 브랜치에서도 같은 모양이 되게 기본값을 함께 적었다. */
 .lp-page {
   --lp-bg: var(--color-background, #f8fafc);
@@ -18,9 +19,8 @@
   --lp-space-lg: var(--space-lg, 24px);
   --lp-space-xl: var(--space-xl, 32px);
 
-  min-height: 100vh;
-  min-height: 100dvh;
-  background: var(--lp-bg);
+  /* 공통 레이아웃(헤더·사이드바) 본문 안에 들어간다. 배경은 레이아웃 것을 쓰고 가운데에 세로로 놓는다. */
+  width: 100%;
   color: var(--lp-text);
   display: flex;
   flex-direction: column;
@@ -33,7 +33,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px var(--lp-space-md);
+  padding: 0 var(--lp-space-md) 12px;
 }
 .lp-header__title { font-weight: 700; color: var(--lp-heading); }
 
@@ -51,7 +51,8 @@
   position: relative;
   width: 100%;
   aspect-ratio: 9 / 16;
-  max-height: calc(100dvh - 100px);
+  /* 공통 헤더 + 본문 여백 + 학습 헤더만큼 뺀다 */
+  max-height: calc(100dvh - var(--header-height, 70px) - 2 * var(--content-padding, 24px) - 48px);
   margin: 0 auto;
   background: #000;
   color: #fff;
@@ -72,9 +73,23 @@
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.75));
   pointer-events: none;
 }
-.lp-video__title { margin: 6px 0 4px; font-size: 1.15rem; color: #fff; }
-.lp-video__desc { margin: 0; font-size: 0.9rem; color: #d7dae0; }
-.lp-video__stats { display: flex; gap: 12px; margin: 6px 0 0; font-size: 0.8rem; color: #d7dae0; }
+.lp-page .lp-video__title { margin: 6px 0 4px; font-size: 1.15rem; color: #fff; }
+.lp-page .lp-video__desc { margin: 0; font-size: 0.9rem; color: #d7dae0; }
+.lp-page .lp-video__stats { display: flex; align-items: center; gap: 12px; margin: 6px 0 0; font-size: 0.8rem; color: #d7dae0; }
+.lp-like {
+  margin: -3px 0;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  pointer-events: auto; /* 정보 영역은 클릭이 영상으로 통과하지만 버튼은 눌려야 한다 */
+}
+.lp-like.is-liked { color: #ff6b81; }
+.lp-like:disabled { opacity: 0.6; cursor: wait; }
+.lp-page .lp-video__error p { margin: 0; color: #fff; }
 .lp-video__error {
   height: 100%;
   display: flex;
@@ -100,8 +115,8 @@
   border-radius: 16px;
   padding: 20px;
 }
-.lp-panel__step { margin: 0 0 var(--lp-space-sm); color: var(--lp-muted); font-size: 0.85rem; }
-.lp-panel__question { margin: 0 0 var(--lp-space-md); font-size: 1.1rem; line-height: 1.5; color: var(--lp-heading); }
+.lp-page .lp-panel__step { margin: 0 0 var(--lp-space-sm); color: var(--lp-muted); font-size: 0.85rem; }
+.lp-page .lp-panel__question { margin: 0 0 var(--lp-space-md); font-size: 1.1rem; line-height: 1.5; color: var(--lp-heading); }
 
 .lp-options { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .lp-option {
@@ -137,9 +152,9 @@
 .lp-option.is-answer .lp-option__no { background: var(--lp-correct); color: #fff; }
 .lp-option.is-wrong .lp-option__no { background: var(--lp-wrong); color: #fff; }
 
-.lp-verdict { margin: 0 0 var(--lp-space-sm); font-size: 1.25rem; font-weight: 700; }
-.lp-verdict.is-correct, .is-correct { color: var(--lp-correct); }
-.lp-verdict.is-wrong, .is-wrong { color: var(--lp-wrong); }
+.lp-page .lp-verdict { margin: 0 0 var(--lp-space-sm); font-size: 1.25rem; font-weight: 700; }
+.lp-page .lp-verdict.is-correct, .lp-page .is-correct { color: var(--lp-correct); }
+.lp-page .lp-verdict.is-wrong, .lp-page .is-wrong { color: var(--lp-wrong); }
 
 .lp-explain {
   margin-top: var(--lp-space-md);
@@ -147,8 +162,8 @@
   border-radius: 12px;
   background: var(--lp-bg);
 }
-.lp-explain p { margin: 6px 0 0; line-height: 1.5; }
-.lp-explain__note { color: var(--lp-muted); font-size: 0.85rem; }
+.lp-page .lp-explain p { margin: 6px 0 0; line-height: 1.5; }
+.lp-page .lp-explain__note { color: var(--lp-muted); font-size: 0.85rem; }
 
 .lp-actions { display: flex; gap: 10px; margin-top: 20px; }
 .lp-actions .lp-btn { flex: 1; }
@@ -194,7 +209,7 @@
 }
 
 /* 추천 */
-.lp-recommend__title { margin: var(--lp-space-xs) 0 10px; font-size: 1rem; color: var(--lp-heading); }
+.lp-page .lp-recommend__title { margin: var(--lp-space-xs) 0 10px; font-size: 1rem; color: var(--lp-heading); }
 .lp-recommend__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
 .lp-card {
   display: flex;
@@ -235,15 +250,15 @@
 }
 .lp-stat__value { font-size: 1.6rem; font-weight: 700; color: var(--lp-heading); }
 .lp-stat__label { color: var(--lp-muted); font-size: 0.85rem; }
-.lp-rate { margin: var(--lp-space-md) 0 var(--lp-space-sm); font-weight: 700; text-align: center; }
+.lp-page .lp-rate { margin: var(--lp-space-md) 0 var(--lp-space-sm); font-weight: 700; text-align: center; }
 .lp-history { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--lp-space-sm); }
 .lp-history__item { display: flex; gap: 10px; padding: 10px; border-radius: 10px; background: var(--lp-bg); }
-.lp-history__item p { margin: 0; }
-.lp-history__q { line-height: 1.4; }
+.lp-page .lp-history__item p { margin: 0; }
+.lp-page .lp-history__q { line-height: 1.4; }
 
-.lp-muted { color: var(--lp-muted); font-size: 0.85rem; }
+.lp-page .lp-muted { color: var(--lp-muted); font-size: 0.85rem; }
 .lp-center { text-align: center; }
-.lp-error { margin: 0; color: var(--lp-wrong); text-align: center; }
+.lp-page .lp-error { margin: 0; color: var(--lp-wrong); text-align: center; }
 .lp-login-required {
   display: flex;
   flex-direction: column;
@@ -255,4 +270,4 @@
   background: var(--lp-surface);
   text-align: center;
 }
-.lp-login-required p { margin: 0; }
+.lp-page .lp-login-required p { margin: 0; }

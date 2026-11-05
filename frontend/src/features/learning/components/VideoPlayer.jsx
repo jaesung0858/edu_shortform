@@ -4,7 +4,7 @@ import { addView } from '../api/learningApi'
 const formatCount = (n) => (n ?? 0).toLocaleString('ko-KR')
 
 // 세로형 숏폼 플레이어. 브라우저 자동재생 정책 때문에 음소거로 시작하고, 컨트롤에서 소리를 켤 수 있다.
-export default function VideoPlayer({ video, onEnded }) {
+export default function VideoPlayer({ video, like, likePending, onToggleLike, onEnded }) {
   const [failed, setFailed] = useState(false)
   const viewCounted = useRef(false)
 
@@ -43,7 +43,16 @@ export default function VideoPlayer({ video, onEnded }) {
         {video.description && <p className="lp-video__desc">{video.description}</p>}
         <p className="lp-video__stats">
           <span>조회수 {formatCount(video.viewCount)}</span>
-          <span aria-label={`좋아요 ${formatCount(video.likeCount)}개`}>♥ {formatCount(video.likeCount)}</span>
+          <button
+            type="button"
+            className={`lp-like${like.liked ? ' is-liked' : ''}`}
+            aria-pressed={like.liked}
+            aria-label={`좋아요 ${formatCount(like.likeCount)}개${like.liked ? ', 누름' : ''}`}
+            disabled={likePending}
+            onClick={onToggleLike}
+          >
+            {like.liked ? '♥' : '♡'} {formatCount(like.likeCount)}
+          </button>
         </p>
       </div>
     </div>

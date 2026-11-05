@@ -34,16 +34,16 @@ export default function App() {
         <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
+        <Route path="/learn/summary" element={<SummaryPage />} />
+        <Route
+          path="/learn/:videoId"
+          element={(
+            <RequireAuth>
+              <LearningRoute />
+            </RequireAuth>
+          )}
+        />
       </Route>
-      <Route path="/learn/summary" element={<SummaryPage />} />
-      <Route
-        path="/learn/:videoId"
-        element={(
-          <RequireAuth>
-            <LearningRoute />
-          </RequireAuth>
-        )}
-      />
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />

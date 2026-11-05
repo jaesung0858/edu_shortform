@@ -5,7 +5,7 @@ import Sidebar from '../components/sidebar'
 import { useAuthSession } from '../auth/useAuthSession'
 import './layout.css'
 
-function Layout({ sidebar = <Sidebar /> }) {
+function Layout({ sidebar }) {
   const navigate = useNavigate()
   const { session, logout } = useAuthSession()
   const [loggingOut, setLoggingOut] = useState(false)
@@ -38,7 +38,7 @@ function Layout({ sidebar = <Sidebar /> }) {
         <p role="alert" className="session-error">{logoutError || session.error}</p>
       )}
       <div className="layout-body">
-        {sidebar}
+        {sidebar ?? <Sidebar user={session.user} />}
         <main className="layout-main">
           <Outlet context={session} />
         </main>

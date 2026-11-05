@@ -7,7 +7,6 @@
 
 import httpClient from './httpClient'
 import { getLikeStatus as fetchLikeStatus, likeVideo, unlikeVideo } from '../../../api/like'
-import { increaseView } from '../../../api/view'
 import { mockQuizzes, mockVideos } from './mockData'
 import { findNextVideoId } from './nextVideo'
 import { loadSession } from '../store/learningSession'
@@ -118,16 +117,6 @@ export async function getRecommendations(videoId, correct = true) {
 
 // mock 모드에서 좋아요 상태를 흉내 낸다. 새로고침하면 처음으로 돌아간다.
 const mockLiked = new Set()
-
-/** 조회수 1 증가. POST /api/videos/{videoId}/views → { videoId, viewCount } */
-export async function addView(videoId) {
-  if (USE_MOCK) {
-    const video = mockVideos.find((v) => v.videoId === Number(videoId))
-    if (video) video.viewCount += 1
-    return { videoId: Number(videoId), viewCount: video?.viewCount ?? 0 }
-  }
-  return increaseView(videoId)
-}
 
 /** 내 좋아요 상태. 로그인 필요. GET /api/videos/{videoId}/like → { videoId, liked, likeCount } */
 export async function getLikeStatus(videoId) {

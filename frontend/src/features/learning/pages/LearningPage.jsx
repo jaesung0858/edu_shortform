@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import {
-  addView,
   getLikeStatus,
   getNextVideoId,
   getQuizzes,
@@ -42,7 +41,6 @@ export default function LearningPage({ videoId }) {
   const [error, setError] = useState(null)
   const [like, setLike] = useState(null) // 서버에서 받은 { liked, likeCount }. 받기 전에는 영상 정보의 숫자를 쓴다.
   const [likePending, setLikePending] = useState(false)
-  const viewCounted = useRef(false)
 
   useEffect(() => {
     let ignore = false
@@ -53,15 +51,6 @@ export default function LearningPage({ videoId }) {
       ignore = true
     }
   }, [videoId])
-
-  // 영상이 열리면 조회수를 한 번만 올린다. (StrictMode의 effect 재실행·영상 다시 보기에도 다시 부르지 않음)
-  useEffect(() => {
-    if (load.status !== 'ready' || viewCounted.current) return
-    viewCounted.current = true
-    addView(videoId)
-      .then(({ viewCount }) => setLoad((prev) => ({ ...prev, video: { ...prev.video, viewCount } })))
-      .catch(() => {}) // 조회수 실패는 학습을 막지 않는다
-  }, [load.status, videoId])
 
   useEffect(() => {
     let ignore = false

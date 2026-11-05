@@ -16,7 +16,6 @@ import AdminUser from './pages/adminUser'
 import AdminVideos from './pages/adminVideos'
 import './App.css'
 
-
 export default function App() {
   const { session } = useAuthSession()
   const { user } = session
@@ -36,31 +35,28 @@ export default function App() {
           )}
         />
         <Route path="/myPage" element={<MyPage user={user} />} />
-        <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
+        <Route path="/learn/summary" element={<SummaryPage />} />
+        <Route
+          path="/learn/:videoId"
+          element={(
+            <RequireAuth>
+              <LearningRoute />
+            </RequireAuth>
+          )}
+        />
       </Route>
       <Route element={<RequireAdmin />}>
         <Route element={<AdminLayout />}>
-          <Route path="/admin/videos" element={<AdminVideos />} />
           <Route path="/admin/users" element={<AdminUser />} />
+          <Route path="/admin/videos" element={<AdminVideos />} />
         </Route>
       </Route>
-      <Route path="/learn/summary" element={<SummaryPage />} />
-      <Route
-        path="/learn/:videoId"
-        element={(
-          <RequireAuth>
-            <LearningRoute />
-          </RequireAuth>
-        )}
-      />
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />
-      
       <Route path="*" element={<Navigate to="/home" replace />} />
-      
     </Routes>
   )
 }

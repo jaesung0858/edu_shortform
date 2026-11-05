@@ -6,7 +6,7 @@ function AdminHeader({ user, loading, onLogout, loggingOut }) {
   return (
     <header className="site-header">
       <img src={logo} alt="로고" className="logo" />
-      
+
       {loading ? (
         <span>회원 정보 확인 중…</span>
       ) : user ? (

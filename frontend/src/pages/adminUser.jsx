@@ -36,7 +36,7 @@ export default function AdminUser() {
     const [keyword, setKeyword] = useState('')
     const [users, setUsers] = useState([])
     const [message, setMessage] = useState('')
-    const [editUserId, setEditUserId] = useState(null)  
+    const [editUserId, setEditUserId] = useState(null)
     const [editNickname, setEditNickname] = useState('')
     const [deleteUserId, setDeleteUserId] = useState(null)
 
@@ -88,7 +88,7 @@ export default function AdminUser() {
             setMessage(error.message)
         }
     }
-    
+
     function handleEdit(user) {
         setEditUserId(user.userId)
         setEditNickname(user.nickname)
@@ -187,7 +187,7 @@ export default function AdminUser() {
                     <p>정말로 이 회원을 삭제하시겠습니까?</p>
 
                     <div className="delete-modal-buttons">
-                        
+
                         <button
                             type="button"
                             className="btn-danger"
@@ -203,7 +203,7 @@ export default function AdminUser() {
                         >
                             취소
                         </button>
-                        
+
                     </div>
                 </div>
             </div>

@@ -246,6 +246,14 @@
   margin-top: auto;
 }
 
+.admin-video-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
 .admin-video-empty-state {
   padding: 40px 20px;
   text-align: center;

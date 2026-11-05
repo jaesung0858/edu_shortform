@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useAuthSession } from './auth/useAuthSession'
 import RequireAuth from './components/RequireAuth'
+import RequireAdmin from './components/RequireAdmin'
 import { LearningRoute, SummaryPage } from './features/learning'
 import { VideoUploadPage } from './features/videoUpload'
 import { LoginFeature } from './features/login'
@@ -37,8 +38,10 @@ export default function App() {
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
       </Route>
-      <Route element={<Layout sidebar={<AdminSidebar />} />}>
-        <Route path="/admin/videos" element={<AdminVideos />} />
+      <Route element={<RequireAdmin />}>
+        <Route element={<Layout sidebar={<AdminSidebar />} />}>
+          <Route path="/admin/videos" element={<AdminVideos />} />
+        </Route>
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />
       <Route

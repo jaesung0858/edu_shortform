@@ -12,6 +12,7 @@ import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
 import AdminUser from './pages/adminUser'
+import AdminVideos from './pages/adminVideos'
 import './App.css'
 
 
@@ -49,7 +50,17 @@ export default function App() {
       </Route> 
       <Route element={<AdminLayout />}>
         <Route path="/admin/users" element={<AdminUser />} />
+        <Route path="/admin/videos" element={<AdminVideos />} />
       </Route>
+      <Route path="/learn/summary" element={<SummaryPage />} />
+      <Route
+        path="/learn/:videoId"
+        element={(
+          <RequireAuth>
+            <LearningRoute />
+          </RequireAuth>
+        )}
+      />
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />

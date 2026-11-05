@@ -1,15 +1,21 @@
-import './adminSidebar.css';
-import {NavLink} from "react-router-dom";
+import { NavLink } from 'react-router-dom'
 
-function AdminSidebar(){
-    return (
-        <aside className = "site-sidebar">
-            <nav>
-                <NavLink to='/admin/users' className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>회원관리</NavLink>
-                <NavLink to='/home' className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>이부분에 연결하시면 됩니다.</NavLink>
-            </nav>
-        </aside>
-    )
+const videoManagementLabel = '\uC601\uC0C1 \uAD00\uB9AC'
 
+export default function AdminSidebar() {
+  return (
+    <aside className="site-sidebar" aria-label="\uAD00\uB9AC\uC790 \uBA54\uB274">
+      <nav>
+        <NavLink to='/admin/users'end 
+        className={({isActive}) => isActive ? "sidebar-link active" : "sidebar-link"}>회원관리</NavLink>
+        <NavLink
+          to="/admin/videos"
+          end
+          className={({ isActive }) => isActive ? 'sidebar-link active' : 'sidebar-link'}
+        >
+          {videoManagementLabel}
+        </NavLink>
+      </nav>
+    </aside>
+  )
 }
-export default AdminSidebar

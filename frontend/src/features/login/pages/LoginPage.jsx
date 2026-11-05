@@ -30,7 +30,11 @@ export default function LoginPage({ onNavigate }) {
         setMessage('로그인했지만 세션을 확인하지 못했습니다. 다시 시도해주세요.')
         return
       }
-      navigate(getPostLoginPath(location.state?.from), { replace: true })
+      if (user.role === 'ADMIN') {
+        navigate('/admin/users', { replace: true })
+      } else {
+        navigate(getPostLoginPath(location.state?.from), { replace: true })
+      }
     } catch (error) {
       setMessage(error.response?.status === 401
         ? '이메일 또는 비밀번호를 확인해주세요.'

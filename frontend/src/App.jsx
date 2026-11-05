@@ -5,12 +5,15 @@ import { LearningRoute, SummaryPage } from './features/learning'
 import { VideoUploadPage } from './features/videoUpload'
 import { LoginFeature } from './features/login'
 import Layout from './layouts/layout'
+import AdminLayout from './layouts/adminLayout'
 import Home from './pages/home'
 import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
+import AdminUser from './pages/adminUser'
 import './App.css'
+
 
 export default function App() {
   const { session } = useAuthSession()
@@ -43,11 +46,16 @@ export default function App() {
             </RequireAuth>
           )}
         />
+      </Route> 
+      <Route element={<AdminLayout />}>
+        <Route path="/admin/users" element={<AdminUser />} />
       </Route>
       <Route path="/login" element={<LoginFeature />} />
       <Route path="/signup" element={<LoginFeature view="signup" />} />
       <Route path="/forgot-password" element={<LoginFeature view="forgot" />} />
+      
       <Route path="*" element={<Navigate to="/home" replace />} />
+      
     </Routes>
   )
 }

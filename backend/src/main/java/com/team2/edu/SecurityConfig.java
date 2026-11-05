@@ -1,5 +1,6 @@
 package com.team2.edu;
 
+import com.team2.edu.user.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,6 +10,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
@@ -23,8 +25,9 @@ class SecurityConfig {
 
     // 접근 권한과 세션 로그인 설정
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository users) throws Exception {
+        http.addFilterBefore(new ActiveMemberFilter(users), AuthorizationFilter.class);
+
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
                 //로그인 없어도 조회수 올라가게 설정

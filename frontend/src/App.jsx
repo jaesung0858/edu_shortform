@@ -41,8 +41,9 @@ export default function App() {
         <Route path="/channel/upload" element={<VideoUploadPage />} />
       </Route>
       <Route element={<RequireAdmin />}>
-        <Route element={<Layout sidebar={<AdminSidebar />} />}>
+        <Route element={<AdminLayout />}>
           <Route path="/admin/videos" element={<AdminVideos />} />
+          <Route path="/admin/users" element={<AdminUser />} />
         </Route>
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />

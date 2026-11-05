@@ -63,6 +63,7 @@ export default function AdminUser() {
             setMessage(error.message)
             setDeleteUserId(null)
         }
+
     }
 
     async function handleUpdate(userId) {

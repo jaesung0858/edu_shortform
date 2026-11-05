@@ -5,11 +5,13 @@ import { LearningRoute, SummaryPage } from './features/learning'
 import { VideoUploadPage } from './features/videoUpload'
 import { LoginFeature } from './features/login'
 import Layout from './layouts/layout'
+import AdminSidebar from './components/adminSidebar'
 import Home from './pages/home'
 import Explore from './pages/explore'
 import MyChannel from './pages/myChannel'
 import MyPage from './pages/myPage'
 import VideoWatch from './pages/videoWatch'
+import AdminVideos from './pages/adminVideos'
 import './App.css'
 
 export default function App() {
@@ -34,6 +36,9 @@ export default function App() {
         <Route path="/myPage" element={<MyPage />} />
         <Route path="/videos/:videoId" element={<VideoWatch />} />
         <Route path="/channel/upload" element={<VideoUploadPage />} />
+      </Route>
+      <Route element={<Layout sidebar={<AdminSidebar />} />}>
+        <Route path="/admin/videos" element={<AdminVideos />} />
       </Route>
       <Route path="/learn/summary" element={<SummaryPage />} />
       <Route

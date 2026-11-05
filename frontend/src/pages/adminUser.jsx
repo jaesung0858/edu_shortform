@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthSession } from '../auth/useAuthSession'
-<<<<<<< HEAD
-import { getAdminUsers } from '../api/admin'
-=======
 import {
   getAdminUsers,
   deleteAdminUser,
   updateAdminUserNickname
 } from '../api/admin'
->>>>>>> 940a7b2 (feat: 관리자 회원 관리 기능 구현)
 import './adminUser.css'
 
 export default function AdminUser() {
@@ -53,10 +49,6 @@ export default function AdminUser() {
         }
     }
 
-<<<<<<< HEAD
-    function handleDelete(userId) {
-        console.log('삭제 회원:', userId)
-=======
     async function handleDelete() {
         try {
             await deleteAdminUser(deleteUserId)
@@ -71,7 +63,6 @@ export default function AdminUser() {
             setMessage(error.message)
             setDeleteUserId(null)
         }
->>>>>>> 940a7b2 (feat: 관리자 회원 관리 기능 구현)
     }
 
     async function handleUpdate(userId) {

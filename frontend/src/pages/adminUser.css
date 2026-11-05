@@ -33,12 +33,13 @@
 
 .admin-user-row {
   display: grid;
-  grid-template-columns: 70px 1fr 2fr 100px 150px 100px;
+  grid-template-columns: 0.5fr 1fr 2fr 0.8fr 1.5fr 1.2fr;
   align-items: center;
   min-height: 60px;
   padding: 0 20px;
   border-bottom: 1px solid var(--color-border);
 }
+
 
 .admin-user-row:last-child {
   border-bottom: none;
@@ -47,5 +48,103 @@
 .admin-user-header {
   background-color: var(--color-background);
   font-weight: 600;
+}
+
+.admin-user-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    align-items: center;
+}
+
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 1000;
+}
+
+.delete-modal {
+  width: 360px;
+  padding: 24px;
+  background: white;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.delete-modal h3 {
+  margin: 0 0 12px;
+}
+
+.delete-modal p {
+  margin: 0 0 24px;
+}
+
+.delete-modal-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.delete-modal-buttons button {
+  padding: 8px 18px;
+}
+
+@media (max-width: 768px) {
+  .admin-user-page {
+    padding: 16px;
+  }
+
+  .admin-user-page h1 {
+    font-size: 20px;
+    margin-bottom: 16px;
+  }
+
+  .admin-user-search {
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .admin-user-search input {
+    width: 100%;
+    padding: 7px 10px;
+    font-size: 12px;
+  }
+
+  .admin-user-search button {
+    padding: 7px 12px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .admin-user-row {
+    /* 비율은 PC와 동일 */
+    grid-template-columns: 0.5fr 1fr 2fr 0.8fr 1.5fr 1.2fr;
+
+    min-height: 45px;
+    padding: 0 8px;
+    font-size: 11px;
+  }
+
+  .admin-user-actions {
+    gap: 4px;
+  }
+
+  .admin-user-actions button {
+    padding: 4px 6px;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+
+  .admin-user-row input {
+    width: 90%;
+    padding: 4px;
+    font-size: 10px;
+  }
 }
 

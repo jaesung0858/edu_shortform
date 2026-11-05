@@ -1,7 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthSession } from '../auth/useAuthSession'
+<<<<<<< HEAD
 import { getAdminUsers } from '../api/admin'
+=======
+import {
+  getAdminUsers,
+  deleteAdminUser,
+  updateAdminUserNickname
+} from '../api/admin'
+>>>>>>> 940a7b2 (feat: 관리자 회원 관리 기능 구현)
 import './adminUser.css'
 
 export default function AdminUser() {
@@ -32,6 +40,9 @@ export default function AdminUser() {
     const [keyword, setKeyword] = useState('')
     const [users, setUsers] = useState([])
     const [message, setMessage] = useState('')
+    const [editUserId, setEditUserId] = useState(null)  
+    const [editNickname, setEditNickname] = useState('')
+    const [deleteUserId, setDeleteUserId] = useState(null)
 
     async function handleSearch() {
         try {
@@ -42,8 +53,58 @@ export default function AdminUser() {
         }
     }
 
+<<<<<<< HEAD
     function handleDelete(userId) {
         console.log('삭제 회원:', userId)
+=======
+    async function handleDelete() {
+        try {
+            await deleteAdminUser(deleteUserId)
+
+            setUsers((prevUsers) =>
+                prevUsers.filter((user) => user.userId !== deleteUserId)
+            )
+
+            setDeleteUserId(null)
+            setMessage('회원이 삭제되었습니다.')
+        } catch (error) {
+            setMessage(error.message)
+            setDeleteUserId(null)
+        }
+>>>>>>> 940a7b2 (feat: 관리자 회원 관리 기능 구현)
+    }
+
+    async function handleUpdate(userId) {
+        try {
+            setMessage('')
+
+            const updatedUser = await updateAdminUserNickname(
+            userId,
+            editNickname
+            )
+
+            setUsers((prevUsers) =>
+            prevUsers.map((user) =>
+                user.userId === userId ? updatedUser : user
+            )
+            )
+
+            setEditUserId(null)
+            setEditNickname('')
+            setMessage('회원 정보가 수정되었습니다.')
+        } catch (error) {
+            setMessage(error.message)
+        }
+    }
+    
+    function handleEdit(user) {
+        setEditUserId(user.userId)
+        setEditNickname(user.nickname)
+    }
+
+    function handleCancel() {
+        setEditUserId(null)
+        setEditNickname('')
     }
 
     return (
@@ -77,23 +138,84 @@ export default function AdminUser() {
             {users.map((user) => (
             <div className="admin-user-row" key={user.userId}>
                 <span>{user.userId}</span>
-                <span>{user.nickname}</span>
+                <span>
+                    {editUserId === user.userId ? (
+                        <input
+                        type="text"
+                        value={editNickname}
+                        onChange={(e) => setEditNickname(e.target.value)}
+                        />
+                    ) : (
+                        user.nickname
+                    )}
+                </span>
                 <span>{user.email}</span>
                 <span>{user.role}</span>
                 <span>{user.createdAt}</span>
 
-                <span>
-                <button
-                    type="button"
-                    className="btn-danger"
-                    onClick={() => handleDelete(user.userId)}
-                >
-                    삭제
-                </button>
+                <span className="admin-user-actions">
+                    {editUserId === user.userId ? (
+                        <>
+                        <button type="button" className='btn-secondary' onClick={() => handleUpdate(user.userId)}>
+                            확인
+                        </button>
+
+                        <button type="button"className='btn-secondary' onClick={handleCancel}>
+                            취소
+                        </button>
+                        </>
+                    ) : (
+                        <>
+                        <button
+                            type="button"
+                            className='btn-secondary'
+                            onClick={() => handleEdit(user)}
+                        >
+                            수정
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={() => setDeleteUserId(user.userId)}
+                        >
+                            삭제
+                        </button>
+                        </>
+                    )}
                 </span>
             </div>
             ))}
         </div>
+        {deleteUserId !== null && (
+            <div className="delete-modal-overlay">
+                <div className="delete-modal">
+                    <h3>회원 삭제</h3>
+
+                    <p>정말로 이 회원을 삭제하시겠습니까?</p>
+
+                    <div className="delete-modal-buttons">
+                        
+                        <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={handleDelete}
+                        >
+                            삭제
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => setDeleteUserId(null)}
+                        >
+                            취소
+                        </button>
+                        
+                    </div>
+                </div>
+            </div>
+        )}
         </section>
     )
 }

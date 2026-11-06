@@ -144,15 +144,16 @@ class VideoInteractionIntegrationTests {
     }
 
     @Test
-    void deletedMemberViewCountsWithoutHistory() throws Exception {
+    void deletedMemberSessionIsRejectedWithoutHistory() throws Exception {
         var learner = member();
         var video = video(member());
         var session = session(learner);
         ReflectionTestUtils.setField(learner, "deletedAt", LocalDateTime.now());
         users.saveAndFlush(learner);
 
+        // 탈퇴 회원의 세션은 ActiveMemberFilter가 먼저 끊는다
         mvc.perform(post("/api/videos/" + video.getId() + "/views").session(session))
-                .andExpect(status().isOk()).andExpect(jsonPath("$.viewCount").value(1));
+                .andExpect(status().isUnauthorized());
         assertThat(watchHistories.existsById(new UserVideoId(learner.getId(), video.getId()))).isFalse();
     }
 

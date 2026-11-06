@@ -4,7 +4,7 @@ import { getMyVideos, getVideos } from '../api/videos'
 import thumbnail from '../assets/video.png'
 import './VideoList.css'
 
-export default function VideoList({ showCategories = false, mine = false }) {
+export default function VideoList({ showCategories = false, mine = false, keyword='' }) {
   const [categoryId, setCategoryId] = useState('')
   const [page, setPage] = useState(0)
   const [retry, setRetry] = useState(0)
@@ -12,7 +12,7 @@ export default function VideoList({ showCategories = false, mine = false }) {
 
   useEffect(() => {
     let active = true
-    const request = mine ? getMyVideos(page) : getVideos(page, categoryId)
+    const request = mine ? getMyVideos(page) : getVideos(page, categoryId, keyword)
     request
       .then(data => {
         if (!active) return
@@ -29,7 +29,7 @@ export default function VideoList({ showCategories = false, mine = false }) {
           error: error.response?.status === 401 ? '다시 로그인해주세요.' : '영상 목록을 불러오지 못했습니다.' }))
       })
     return () => { active = false }
-  }, [page, categoryId, retry, mine])
+  }, [page, categoryId, retry, mine, keyword])
 
   function selectCategory(value) {
     if (value === categoryId) return

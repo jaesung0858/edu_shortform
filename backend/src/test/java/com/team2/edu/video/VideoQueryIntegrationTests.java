@@ -5,10 +5,12 @@ import com.team2.edu.user.repository.UserRepository;
 import com.team2.edu.video.entity.Category;
 import com.team2.edu.video.entity.ConceptTag;
 import com.team2.edu.video.entity.Video;
+import com.team2.edu.video.entity.VideoLike;
 import com.team2.edu.video.entity.VideoStatus;
 import com.team2.edu.video.repository.CategoryRepository;
 import com.team2.edu.video.repository.ConceptTagRepository;
 import com.team2.edu.video.repository.VideoRepository;
+import com.team2.edu.video.repository.VideoLikeRepository;
 import jakarta.persistence.EntityManager;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,6 +44,7 @@ class VideoQueryIntegrationTests {
     @Autowired CategoryRepository categories;
     @Autowired ConceptTagRepository tags;
     @Autowired VideoRepository videos;
+    @Autowired VideoLikeRepository likes;
     @Autowired EntityManager entityManager;
 
     @Test
@@ -161,6 +164,47 @@ class VideoQueryIntegrationTests {
         ReflectionTestUtils.setField(alice, "deletedAt", LocalDateTime.now());
         users.saveAndFlush(alice);
         mvc.perform(get("/api/users/me/videos").session(session(alice))).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void likedListUsesSessionMemberAndOnlyReturnsAvailableVideosInLikeOrder() throws Exception {
+        var learner = member();
+        var other = member();
+        var creator = member();
+        var category = categories.saveAndFlush(new Category("liked-" + suffix()));
+        var tag = tags.saveAndFlush(new ConceptTag(category, "liked tag"));
+        var older = videos.saveAndFlush(new Video(creator, category, tag, "older like", "", "test.mp4", 30));
+        var newer = videos.saveAndFlush(new Video(creator, category, tag, "newer like", "", "test.mp4", 30));
+        var hidden = videos.saveAndFlush(new Video(creator, category, tag, "hidden like", "", "test.mp4", 30));
+        var others = videos.saveAndFlush(new Video(creator, category, tag, "other member like", "", "test.mp4", 30));
+
+        likes.saveAndFlush(new VideoLike(learner, older));
+        likes.saveAndFlush(new VideoLike(learner, newer));
+        likes.saveAndFlush(new VideoLike(learner, hidden));
+        likes.saveAndFlush(new VideoLike(other, others));
+        entityManager.createNativeQuery("UPDATE video_like SET created_at = :createdAt WHERE user_id = :userId AND video_id = :videoId")
+                .setParameter("createdAt", LocalDateTime.of(2026, 1, 1, 0, 0))
+                .setParameter("userId", learner.getId()).setParameter("videoId", older.getId()).executeUpdate();
+        entityManager.createNativeQuery("UPDATE video_like SET created_at = :createdAt WHERE user_id = :userId AND video_id = :videoId")
+                .setParameter("createdAt", LocalDateTime.of(2026, 1, 2, 0, 0))
+                .setParameter("userId", learner.getId()).setParameter("videoId", newer.getId()).executeUpdate();
+        ReflectionTestUtils.setField(hidden, "status", VideoStatus.HIDDEN);
+        videos.saveAndFlush(hidden);
+        entityManager.clear();
+
+        mvc.perform(get("/api/users/me/liked-videos")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/users/me/liked-videos").session(session(learner))
+                        .param("userId", other.getId().toString()).header("X-User-Id", other.getId().toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.videos[*].videoId").value(contains(
+                        newer.getId().intValue(), older.getId().intValue())))
+                .andExpect(jsonPath("$.categories").isEmpty())
+                .andExpect(jsonPath("$.hasNext").value(false));
+        mvc.perform(get("/api/users/me/liked-videos").session(session(other)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.videos[*].videoId").value(contains(others.getId().intValue())));
+        mvc.perform(get("/api/users/me/liked-videos").session(session(learner)).param("page", "-1"))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

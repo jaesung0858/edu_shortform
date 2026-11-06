@@ -3,7 +3,9 @@ package com.team2.edu.video.service;
 import com.team2.edu.video.dto.VideoListResponse;
 import com.team2.edu.video.dto.VideoDetailResponse;
 import com.team2.edu.video.entity.Video;
+import com.team2.edu.video.entity.VideoLike;
 import com.team2.edu.video.entity.VideoStatus;
+import com.team2.edu.video.repository.VideoLikeRepository;
 import com.team2.edu.video.repository.VideoRepository;
 import com.team2.edu.user.repository.UserRepository;
 import java.util.List;
@@ -21,12 +23,15 @@ import org.springframework.util.StringUtils;
 public class VideoQueryService {
 
     private final VideoRepository videoRepository;
+    private final VideoLikeRepository videoLikeRepository;
     private final UserRepository userRepository;
     private final VideoStorageService storageService;
 
-    public VideoQueryService(VideoRepository videoRepository, UserRepository userRepository,
+    public VideoQueryService(VideoRepository videoRepository, VideoLikeRepository videoLikeRepository,
+                             UserRepository userRepository,
                              VideoStorageService storageService) {
         this.videoRepository = videoRepository;
+        this.videoLikeRepository = videoLikeRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
     }
@@ -48,6 +53,16 @@ public class VideoQueryService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
         var videos = videoRepository.findMyVideos(email, VideoStatus.DELETED, pageRequest(page));
         return new VideoListResponse(toItems(videos), List.of(), videos.hasNext());
+    }
+
+    // 로그인한 회원이 좋아요한 공개 영상을 좋아요 최신순으로 조회
+    @Transactional(readOnly = true)
+    public VideoListResponse findLiked(String email, int page) {
+        var user = userRepository.findByEmail(email).filter(item -> !item.isDeleted())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
+        var likes = videoLikeRepository.findLikedVideos(user.getId(), VideoStatus.PUBLIC,
+                PageRequest.of(page, 12));
+        return new VideoListResponse(toLikedItems(likes), List.of(), likes.hasNext());
     }
 
     @Transactional(readOnly = true)
@@ -107,12 +122,18 @@ public class VideoQueryService {
     }
 
     private List<VideoListResponse.Item> toItems(Slice<Video> videos) {
-        return videos.stream()
-                .map(video -> new VideoListResponse.Item(video.getId(), video.getTitle(),
-                        video.getCreator().getNickname(), video.getCategory().getId(),
-                        video.getCategory().getName(), video.getTag().getName(),
-                        video.getViewCount(), video.getLikeCount(), video.getDurationSec(),
-                        video.getCreatedAt(), video.getStatus().name(), thumbnailUrl(video)))
-                .toList();
+        return videos.stream().map(this::toItem).toList();
+    }
+
+    private List<VideoListResponse.Item> toLikedItems(Slice<VideoLike> likes) {
+        return likes.stream().map(VideoLike::getVideo).map(this::toItem).toList();
+    }
+
+    private VideoListResponse.Item toItem(Video video) {
+        return new VideoListResponse.Item(video.getId(), video.getTitle(),
+                video.getCreator().getNickname(), video.getCategory().getId(),
+                video.getCategory().getName(), video.getTag().getName(),
+                video.getViewCount(), video.getLikeCount(), video.getDurationSec(),
+                video.getCreatedAt(), video.getStatus().name(), thumbnailUrl(video));
     }
 }

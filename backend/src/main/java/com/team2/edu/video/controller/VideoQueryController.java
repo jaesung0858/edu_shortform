@@ -41,6 +41,13 @@ public class VideoQueryController {
         return queryService.findMine(authentication.getName(), page);
     }
 
+    @Operation(summary = "내가 좋아요한 영상 목록", description = "로그인한 회원이 좋아요한 공개 영상을 좋아요 최신순으로 12개씩 조회합니다.")
+    @GetMapping("/api/users/me/liked-videos")
+    public VideoListResponse likedVideos(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                         Authentication authentication) {
+        return queryService.findLiked(authentication.getName(), page);
+    }
+
     @Operation(summary = "영상 상세 조회")
     @GetMapping("/api/videos/{videoId}")
     public VideoDetailResponse detail(@PathVariable @Positive Long videoId, Authentication authentication) {

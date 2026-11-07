@@ -51,4 +51,18 @@ public class User extends BaseTimeEntity {
     public boolean isDeleted() {
         return deletedAt != null;
     }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 비밀번호는 해시값으로 전달
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    // 회원 탈퇴. 행은 남기고 삭제 시각만 기록
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
+    }
 }

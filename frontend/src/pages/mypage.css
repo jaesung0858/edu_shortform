@@ -128,6 +128,143 @@
     background: #fff1f2;
 }
 
+.menu-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.menu-modal {
+    width: 430px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+}
+
+.menu-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.menu-modal-buttons button {
+    white-space: nowrap;
+}
+
+.nickname-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.nickname-modal {
+    width: 360px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.nickname-modal input {
+    width: 90%;
+    box-sizing: border-box;
+}
+
+.nickname-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+.password-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.password-modal {
+    width: 360px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.password-modal form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.password-modal input {
+    width: 90%;
+    box-sizing: border-box;
+    margin-bottom: 10px;
+}
+
+.password-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.delete-modal-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+}
+
+.delete-modal {
+    width: 360px;
+    padding: 24px;
+    background: white;
+    border-radius: 12px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.delete-modal input {
+    width: 90%;
+    box-sizing: border-box;
+}
+
+.delete-modal-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    width: 100%;
+}
+
 /* 화면이 좁을 때 */
 @media (max-width: 700px) {
     .profile {

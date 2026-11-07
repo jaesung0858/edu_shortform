@@ -7,7 +7,7 @@ import './layout.css'
 
 function Layout({ sidebar }) {
   const navigate = useNavigate()
-  const { session, logout } = useAuthSession()
+  const { session, logout, refreshSession  } = useAuthSession()
   const [loggingOut, setLoggingOut] = useState(false)
   const [logoutError, setLogoutError] = useState('')
 
@@ -40,7 +40,7 @@ function Layout({ sidebar }) {
       <div className="layout-body">
         {sidebar ?? <Sidebar user={session.user} />}
         <main className="layout-main">
-          <Outlet context={session} />
+          <Outlet context={{...session,refreshSession}} />
         </main>
       </div>
     </div>

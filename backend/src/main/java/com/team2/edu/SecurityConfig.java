@@ -1,5 +1,6 @@
 package com.team2.edu;
 
+import com.team2.edu.user.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -9,33 +10,38 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.servlet.util.matcher.PathPatternRequestMatcher;
 
 @Configuration
 class SecurityConfig {
 
-    // 비밀번호 해시 생성과 비교에 BCrypt를 사용한다.
+    // 비밀번호 BCrypt 해시 처리
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    // API 접근 권한과 세션 로그인 방식을 설정한다.
+    // 접근 권한과 세션 로그인 설정
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, UserRepository users) throws Exception {
+        http.addFilterBefore(new ActiveMemberFilter(users), AuthorizationFilter.class);
+
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                //로그인 없어도 조회수 올라가게 설정
+
+                .requestMatchers(HttpMethod.POST, "/api/videos/*/views").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/videos", "/api/videos/*", "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
+                .requestMatchers(HttpMethod.HEAD, "/api/videos/*/content", "/api/videos/*/thumbnail").permitAll()
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers(
                         "/health", "/error",
                         "/swagger-ui/**", "/v3/api-docs/**"
                 ).permitAll()
-                .requestMatchers(
-                        "/api/videos/*/quizzes",
-                        "/api/quizzes/*/answer",
-                        "/api/videos/*/recommendations"
-                ).permitAll()
+                // 퀴즈 문항은 누구나 볼 수 있다. 채점·추천은 로그인 회원 기준이라 아래 authenticated()로 막힌다
+                .requestMatchers(HttpMethod.GET, "/api/videos/*/quizzes").permitAll()
                 .anyRequest().authenticated()
         ).formLogin(form -> form
                 .loginProcessingUrl("/api/login")
@@ -69,4 +75,5 @@ class SecurityConfig {
 
         return http.build();
     }
+
 }

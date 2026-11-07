@@ -1,14 +1,15 @@
 import { useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { login as requestLogin } from '../../../api/auth'
+import { useAuthSession } from '../../../auth/useAuthSession'
 import AuthLayout from '../components/AuthLayout'
 import TextField from '../components/TextField'
-import { DEFAULT_POST_LOGIN_PATH, getPostLoginPath } from '../redirectTarget'
-
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || ''
+import { getPostLoginPath } from '../redirectTarget'
 
 export default function LoginPage({ onNavigate }) {
-  const navigate = useNavigate()
   const location = useLocation()
+  const navigate = useNavigate()
+  const { refreshSession } = useAuthSession()
   const [message, setMessage] = useState('')
   const [pending, setPending] = useState(false)
 
@@ -23,29 +24,23 @@ export default function LoginPage({ onNavigate }) {
     setMessage('')
 
     try {
-      const response = await fetch(`${apiBaseUrl}/api/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          Accept: 'application/json',
-          'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-        },
-        body: new URLSearchParams({ username: email, password }),
-      })
-
-      if (!response.ok) {
-        setMessage(response.status === 401
-          ? '이메일 또는 비밀번호를 확인해주세요.'
-          : '로그인하지 못했습니다. 잠시 후 다시 시도해주세요.')
+      await requestLogin(email, password)
+      const user = await refreshSession()
+      if (!user) {
+        setMessage('로그인했지만 세션을 확인하지 못했습니다. 다시 시도해주세요.')
         return
       }
-
-      navigate(
-        getPostLoginPath(location.state?.from) || DEFAULT_POST_LOGIN_PATH,
-        { replace: true },
-      )
-    } catch {
-      setMessage('로그인하지 못했습니다. 서버 연결을 확인한 뒤 다시 시도해주세요.')
+      const requestedPath = location.state?.from?.pathname
+      const postLoginPath = getPostLoginPath(location.state?.from)
+      let destination = postLoginPath
+      if (user.role === 'ADMIN') {
+        destination = requestedPath === '/admin/videos' ? '/admin/videos' : '/admin/users'
+      }
+      navigate(destination, { replace: true })
+    } catch (error) {
+      setMessage(error.response?.status === 401
+        ? '이메일 또는 비밀번호를 확인해주세요.'
+        : '로그인하지 못했습니다. 서버 연결을 확인한 뒤 다시 시도해주세요.')
     } finally {
       setPending(false)
     }
@@ -55,14 +50,14 @@ export default function LoginPage({ onNavigate }) {
     <AuthLayout
       title="로그인"
       description="계정에 로그인하고 오늘의 배움을 이어가세요."
-      footer={
+      footer={(
         <>
           <span>아직 계정이 없으신가요?</span>
           <button className="text-button signup-button" type="button" onClick={() => onNavigate('signup')}>
             회원가입
           </button>
         </>
-      }
+      )}
     >
       <form className="login-form" onSubmit={handleSubmit}>
         <TextField

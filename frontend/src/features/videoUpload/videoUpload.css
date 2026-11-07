@@ -1,0 +1,334 @@
+/* 영상 등록 화면 전용 스타일. 클래스는 모두 vu- 로 시작하고, 색은 index.css 공통 변수를 써서 다크 모드도 따라간다. */
+.vu-page {
+  --vu-danger: #e5484d;
+  --vu-success: #2fbf71;
+
+  max-width: 1080px;
+  padding: 8px 24px 48px;
+  font-size: 16px;
+}
+
+/* .layout h1/h2 공통 크기가 커서 이 화면에서만 줄인다. */
+.layout .vu-heading h1 {
+  font-size: 32px;
+  letter-spacing: -0.8px;
+  margin: 8px 0 4px;
+}
+.layout .vu-page h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+.vu-heading {
+  margin-bottom: 24px;
+}
+
+.vu-form,
+.vu-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.vu-layout {
+  flex-direction: row;
+  align-items: flex-start;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.vu-panel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  background: var(--bg);
+  min-width: 0;
+}
+.vu-media {
+  width: 320px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 16px;
+}
+.vu-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.vu-page em {
+  color: var(--vu-danger);
+  font-style: normal;
+}
+
+/* 영상 선택·미리보기 (홈 카드와 같은 9:16 비율) */
+.vu-dropzone,
+.vu-preview {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  border-radius: 12px;
+}
+.vu-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 2px dashed var(--border);
+  background: var(--code-bg);
+  color: var(--text);
+  font-size: 14px;
+  cursor: pointer;
+  text-align: center;
+  padding: 16px;
+}
+.vu-dropzone strong {
+  color: var(--accent);
+  font-size: 16px;
+}
+.vu-dropzone:hover {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+.vu-layout:disabled .vu-dropzone {
+  cursor: default;
+}
+.vu-preview {
+  display: block;
+  background: #000;
+  object-fit: contain;
+}
+.vu-file-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.vu-file-info {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin-top: 12px;
+  font-size: 14px;
+}
+.vu-file-name {
+  width: 100%;
+  color: var(--text-h);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 입력칸 */
+.vu-field {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  color: var(--text-h);
+}
+.vu-field input,
+.vu-field textarea,
+.vu-field select,
+.vu-option input:not([type='radio']) {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 15px;
+}
+.vu-field textarea {
+  resize: vertical;
+}
+.vu-field input:focus,
+.vu-field textarea:focus,
+.vu-field select:focus,
+.vu-option input:focus {
+  outline: 2px solid var(--accent-border);
+  outline-offset: 0;
+  border-color: var(--accent);
+}
+.vu-count {
+  align-self: flex-end;
+  color: var(--text);
+  font-size: 12px;
+}
+.vu-row {
+  display: flex;
+  gap: 12px;
+}
+
+/* 퀴즈 */
+.layout .vu-page h2.vu-section-title {
+  margin: 8px 0 0;
+}
+.vu-quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--social-bg);
+  min-width: 0;
+}
+.vu-quiz legend {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 0 6px;
+  color: var(--text-h);
+  font-weight: 600;
+  font-size: 14px;
+}
+.vu-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.vu-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.vu-option input[type='radio'] {
+  accent-color: var(--accent);
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+}
+.vu-option__no {
+  width: 16px;
+  font-size: 14px;
+  color: var(--text-h);
+}
+
+/* 버튼·상태 */
+.vu-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+.vu-buttons {
+  display: flex;
+  gap: 8px;
+}
+.vu-primary,
+.vu-secondary {
+  padding: 10px 20px;
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.vu-primary {
+  border: 0;
+  background: var(--accent);
+  color: #fff;
+  min-width: 120px;
+}
+.vu-secondary {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+}
+.vu-details > .vu-secondary {
+  align-self: flex-start;
+}
+.vu-primary:disabled,
+.vu-secondary:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.vu-text-button {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.vu-hint {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+}
+.vu-error,
+.vu-success {
+  margin: 8px 0 0;
+  font-size: 14px;
+}
+.vu-error {
+  color: var(--vu-danger);
+}
+.vu-error a {
+  color: inherit;
+  font-weight: 600;
+}
+.vu-success {
+  color: var(--vu-success);
+  font-weight: 600;
+}
+.vu-progress {
+  position: relative;
+  width: min(100%, 320px);
+  height: 28px;
+  border-radius: 8px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+.vu-progress__bar {
+  height: 100%;
+  background: var(--accent-bg);
+  border-right: 2px solid var(--accent);
+  transition: width 0.2s;
+}
+.vu-progress span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  color: var(--text-h);
+}
+
+@media (max-width: 768px) {
+  .vu-page {
+    padding: 8px 16px 40px;
+  }
+  .vu-layout,
+  .vu-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .vu-media {
+    width: 100%;
+    position: static;
+  }
+  .vu-dropzone,
+  .vu-preview {
+    max-height: 60vh;
+  }
+  .vu-actions {
+    align-items: stretch;
+  }
+  .vu-buttons > * {
+    flex: 1;
+  }
+}

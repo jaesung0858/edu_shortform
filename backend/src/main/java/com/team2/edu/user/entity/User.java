@@ -38,11 +38,11 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false, length = 10)
     private Role role = Role.USER;
 
-    /** NULL이면 일반 회원, 값이 있으면 삭제된 회원 (논리 삭제) */
+    // 회원 삭제 시각. 미삭제 회원은 null
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    // 신규 회원 정보와 비밀번호 해시로 회원 객체를 생성한다.
+    // 신규 회원 생성 (비밀번호는 해시값으로 전달)
     public User(String email, String encodedPassword, String nickname) {
         this.email = email;
         this.password = encodedPassword;
@@ -50,5 +50,19 @@ public class User extends BaseTimeEntity {
     }
     public boolean isDeleted() {
         return deletedAt != null;
+    }
+
+    public void changeNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    // 비밀번호는 해시값으로 전달
+    public void changePassword(String encodedPassword) {
+        this.password = encodedPassword;
+    }
+
+    // 회원 탈퇴. 행은 남기고 삭제 시각만 기록
+    public void delete() {
+        this.deletedAt = LocalDateTime.now();
     }
 }

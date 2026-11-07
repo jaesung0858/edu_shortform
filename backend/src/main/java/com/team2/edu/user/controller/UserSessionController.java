@@ -18,7 +18,7 @@ public class UserSessionController {
         this.userRepository = userRepository;
     }
 
-    // 현재 로그인한 회원 정보를 반환한다.
+    // 로그인한 회원 정보 조회
     @GetMapping("/api/users/me")
     public Map<String, Object> me(Authentication authentication) {
         User user = userRepository.findByEmail(authentication.getName())

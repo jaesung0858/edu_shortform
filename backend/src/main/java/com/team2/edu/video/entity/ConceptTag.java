@@ -32,4 +32,9 @@ public class ConceptTag {
 
     @Column(nullable = false, length = 50)
     private String name;
+
+    public ConceptTag(Category category, String name) {
+        this.category = category;
+        this.name = name;
+    }
 }

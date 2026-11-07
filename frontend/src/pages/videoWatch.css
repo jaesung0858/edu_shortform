@@ -1,0 +1,22 @@
+.watch-page {
+  padding: 24px;
+  max-width: 960px;
+}
+
+.watch-page video {
+  display: block;
+  width: 100%;
+  max-width: 560px;
+  max-height: 75vh;
+  background: #000;
+  border-radius: 8px;
+}
+
+.watch-page p {
+  margin: 12px 0;
+}
+
+.watch-description {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

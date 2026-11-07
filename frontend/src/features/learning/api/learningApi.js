@@ -6,16 +6,24 @@
 //   세션 로그인이라 이 옵션이 없으면 세션 쿠키가 안 실려서 로그인이 풀린 것처럼 동작한다.
 
 import httpClient from './httpClient'
+import { getLikeStatus as fetchLikeStatus, likeVideo, unlikeVideo } from '../../../api/like'
 import { mockQuizzes, mockVideos } from './mockData'
+import { findNextVideoId } from './nextVideo'
 import { loadSession } from '../store/learningSession'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false'
 
 const delay = (ms = 250) => new Promise((resolve) => setTimeout(resolve, ms))
 
+/** 채점·추천·좋아요처럼 로그인이 필요한 API가 401을 줬는지 (공통 like.js는 error.status로 넘겨준다) */
+export const isLoginRequired = (error) => (error?.response?.status ?? error?.status) === 401
+
+// 서버는 '/api/videos/1/content' 같은 상대 주소를 준다. VITE_API_BASE_URL을 쓸 때도 맞는 주소가 되게 붙인다.
+const toApiUrl = (url) => (url ? httpClient.getUri({ url }) : null)
+
 /**
- * 영상 한 개. → { videoId, title, description, videoUrl, tagName, likeCount, thumbnailUrl }
- * TODO 백엔드에 영상 상세 API가 아직 없다. 생기면 경로와 videoKey → URL 변환 방식을 맞출 것.
+ * 영상 한 개. GET /api/videos/{videoId}
+ * → { videoId, title, description, tagName, viewCount, likeCount, videoUrl, thumbnailUrl, ... }
  */
 export async function getVideo(videoId) {
   if (USE_MOCK) {
@@ -25,18 +33,24 @@ export async function getVideo(videoId) {
     return video
   }
   const { data } = await httpClient.get(`/api/videos/${videoId}`)
-  return data
+  return { ...data, videoUrl: toApiUrl(data.videoUrl), thumbnailUrl: toApiUrl(data.thumbnailUrl) }
 }
 
 /**
  * 학습 순서상 다음 영상 id. currentId가 없으면 첫 영상. 마지막이면 null.
- * TODO 백엔드에 "다음 영상" API가 아직 없다. 지금은 mock 순서를 그대로 쓴다.
+ * 실제 모드는 GET /api/videos(공개 영상 최신순, 12개씩) 목록 순서를 따른다.
  */
 export async function getNextVideoId(currentId) {
-  const ids = mockVideos.map((v) => v.videoId)
-  if (currentId == null) return ids[0]
-  const index = ids.indexOf(Number(currentId))
-  return index >= 0 && index < ids.length - 1 ? ids[index + 1] : null
+  if (USE_MOCK) {
+    const ids = mockVideos.map((v) => v.videoId)
+    if (currentId == null) return ids[0]
+    const index = ids.indexOf(Number(currentId))
+    return index >= 0 && index < ids.length - 1 ? ids[index + 1] : null
+  }
+  return findNextVideoId(async (page) => {
+    const { data } = await httpClient.get('/api/videos', { params: { page } })
+    return data
+  }, currentId)
 }
 
 /** 영상이 끝나면 부르는 퀴즈 목록. GET /api/videos/{videoId}/quizzes → [{ quizId, question, options }] */
@@ -52,7 +66,16 @@ export async function getQuizzes(videoId) {
 }
 
 /**
- * 채점. POST /api/quizzes/{quizId}/answer { selectedNo(1~4) }
+ * 재생 시작 시 조회 수 증가. POST /api/videos/{videoId}/views
+ * 로그인 상태면 서버가 시청 기록도 남겨서, 추천에서 이미 본 영상이 빠진다.
+ */
+export async function addView(videoId) {
+  if (USE_MOCK) return
+  await httpClient.post(`/api/videos/${videoId}/views`)
+}
+
+/**
+ * 채점. 로그인 필요(세션). POST /api/quizzes/{quizId}/answer { selectedNo(1~4) }
  * → { correct, answerNo, explanation, tagName, addedToWrongNote }
  */
 export async function submitAnswer(quizId, selectedNo) {
@@ -75,7 +98,7 @@ export async function submitAnswer(quizId, selectedNo) {
 
 /**
  * 결과 화면의 추천 영상. GET /api/videos/{videoId}/recommendations?correct=
- * → [{ videoId, title, thumbnailKey, likeCount, reason }]
+ * 로그인 필요(세션). → [{ videoId, title, thumbnailUrl, likeCount, reason }]
  */
 export async function getRecommendations(videoId, correct = true) {
   if (USE_MOCK) {
@@ -92,11 +115,38 @@ export async function getRecommendations(videoId, correct = true) {
       .map((v) => ({
         videoId: v.videoId,
         title: v.title,
-        thumbnailKey: v.thumbnailUrl,
+        thumbnailUrl: v.thumbnailUrl,
         likeCount: v.likeCount,
         reason: sameTag(v) ? `'${v.tagName}' 한 번 더 복습` : `다음으로 배워볼 '${v.tagName}'`,
       }))
   }
   const { data } = await httpClient.get(`/api/videos/${videoId}/recommendations`, { params: { correct } })
-  return data
+  return data.map((item) => ({ ...item, thumbnailUrl: toApiUrl(item.thumbnailUrl) }))
+}
+
+// mock 모드에서 좋아요 상태를 흉내 낸다. 새로고침하면 처음으로 돌아간다.
+const mockLiked = new Set()
+
+/** 내 좋아요 상태. 로그인 필요. GET /api/videos/{videoId}/like → { videoId, liked, likeCount } */
+export async function getLikeStatus(videoId) {
+  if (USE_MOCK) {
+    await delay()
+    const video = mockVideos.find((v) => v.videoId === Number(videoId))
+    return { videoId: Number(videoId), liked: mockLiked.has(Number(videoId)), likeCount: video?.likeCount ?? 0 }
+  }
+  return fetchLikeStatus(videoId)
+}
+
+/** 좋아요(liked=true) 또는 취소. 로그인 필요. PUT·DELETE /api/videos/{videoId}/like → { videoId, liked, likeCount } */
+export async function setLiked(videoId, liked) {
+  if (USE_MOCK) {
+    await delay()
+    const id = Number(videoId)
+    const video = mockVideos.find((v) => v.videoId === id)
+    if (video && liked !== mockLiked.has(id)) video.likeCount += liked ? 1 : -1
+    if (liked) mockLiked.add(id)
+    else mockLiked.delete(id)
+    return { videoId: id, liked, likeCount: video?.likeCount ?? 0 }
+  }
+  return liked ? likeVideo(videoId) : unlikeVideo(videoId)
 }

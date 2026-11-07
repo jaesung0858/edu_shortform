@@ -21,7 +21,7 @@ public class SignupService {
         this.userRepository = userRepository;
     }
 
-    // 중복 확인 후 비밀번호를 해시로 변환해 회원을 저장한다.
+    // 이메일·닉네임 중복 확인 후 회원 등록
     @Transactional
     public SignupResponse signup(SignupRequest request) {
         String email = request.email().trim();

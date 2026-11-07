@@ -32,7 +32,7 @@ public class RecommendService {
 
     @Transactional(readOnly = true)
     public List<RecommendResponse> recommend(Long userId, Long videoId, boolean correct) {
-        Video current = videoRepository.findById(videoId)
+        Video current = videoRepository.findPublicVideo(videoId, VideoStatus.PUBLIC)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상이 없습니다"));
         Integer tagId = current.getTag().getId();
 

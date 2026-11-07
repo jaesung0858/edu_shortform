@@ -21,7 +21,7 @@ public class SignupController {
         this.signupService = signupService;
     }
 
-    // 회원가입 요청을 검증하고 처리 결과를 반환한다.
+    // 회원가입
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public SignupResponse signup(@Valid @RequestBody SignupRequest request) {

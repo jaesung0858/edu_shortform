@@ -70,10 +70,48 @@ public class Video extends BaseTimeEntity {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // 업로드한 영상 정보
+    public Video(User creator, Category category, ConceptTag tag, String title,
+                 String description, String videoKey, int durationSec) {
+        this.creator = creator;
+        this.category = category;
+        this.tag = tag;
+        this.title = title;
+        this.description = description;
+        this.videoKey = videoKey;
+        this.durationSec = durationSec;
+    }
+
     @Override
     protected void onCreate() {
         super.onCreate();
         updatedAt = getCreatedAt();
+    }
+
+    public void attachThumbnail(String thumbnailKey) {
+        this.thumbnailKey = thumbnailKey;
+    }
+
+    public void increaseViewCount() {
+        viewCount++;
+    }
+
+    public void increaseLikeCount() {
+        likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        likeCount = Math.max(0, likeCount - 1);
+    }
+
+    public void delete() {
+        status = VideoStatus.DELETED;
+    }
+
+    public void updateMetadata(String title, String description, VideoStatus status) {
+        if (title != null) this.title = title.strip();
+        if (description != null) this.description = description;
+        if (status != null) this.status = status;
     }
 
     @PreUpdate

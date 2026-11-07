@@ -56,6 +56,19 @@ public class Quiz extends BaseTimeEntity {
     @Column(length = 1000)
     private String explanation;
 
+    /** 개념 태그는 영상의 태그를 그대로 쓴다 (오답 추천이 영상 태그 기준이라) */
+    public Quiz(Video video, String question, List<String> options, int answerNo, String explanation) {
+        this.video = video;
+        this.tag = video.getTag();
+        this.question = question;
+        this.option1 = options.get(0);
+        this.option2 = options.get(1);
+        this.option3 = options.get(2);
+        this.option4 = options.get(3);
+        this.answerNo = answerNo;
+        this.explanation = explanation;
+    }
+
     public List<String> getOptions() {
         return List.of(option1, option2, option3, option4);
     }

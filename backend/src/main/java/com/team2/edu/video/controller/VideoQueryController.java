@@ -48,6 +48,13 @@ public class VideoQueryController {
         return queryService.findLiked(authentication.getName(), page);
     }
 
+    @Operation(summary = "내 시청 기록", description = "로그인한 회원이 본 공개 영상을 마지막으로 본 순으로 12개씩 조회합니다.")
+    @GetMapping("/api/users/me/watch-history")
+    public VideoListResponse watchHistory(@RequestParam(defaultValue = "0") @Min(0) int page,
+                                          Authentication authentication) {
+        return queryService.findWatched(authentication.getName(), page);
+    }
+
     @Operation(summary = "영상 상세 조회")
     @GetMapping("/api/videos/{videoId}")
     public VideoDetailResponse detail(@PathVariable @Positive Long videoId, Authentication authentication) {

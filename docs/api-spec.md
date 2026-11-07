@@ -1,6 +1,6 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.11.06 / 현재 구현된 코드 기준
+작성 기준: 2026.11.07 / 현재 구현된 코드 기준
 
 현재 구현된 회원, 관리자, 영상 업로드·검색·조회·삭제, 좋아요, 퀴즈·채점·추천 API를 정리했습니다.
 
@@ -60,6 +60,8 @@
 | 33 | PATCH | `/api/users/me` | 내 닉네임 수정 | 필요 |
 | 34 | PATCH | `/api/users/me/password` | 내 비밀번호 변경 | 필요 |
 | 35 | DELETE | `/api/users/me` | 회원 탈퇴 | 필요 |
+| 36 | GET | `/api/users/me/watch-history` | 내 시청 기록 | 필요 |
+| 37 | GET | `/api/users/me/wrong-notes` | 내 오답 노트 | 필요 |
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
 ### 공통 오류 응답
@@ -1192,3 +1194,79 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 400 | 비밀번호 누락 또는 불일치 |
 | 401 | 로그인하지 않음, 세션 만료, 이미 삭제된 회원 |
 | 403 | 관리자 계정은 탈퇴할 수 없음 |
+
+## 12. 마이페이지 목록
+
+시청 기록과 오답 노트를 조회합니다. 좋아요 목록은 24번 API를 사용합니다.
+
+### 36) 내 시청 기록 — GET /api/users/me/watch-history
+
+세션 로그인 필요. 로그인한 회원이 본 공개 영상을 마지막으로 본 시각의 최신순으로 12개씩 조회합니다.
+
+| Query | 타입 | 필수 | 기본값 | 내용 |
+| --- | --- | --- | --- | --- |
+| page | integer | X | 0 | 0부터 시작하는 페이지 번호 |
+
+**Response — 200 OK**
+
+응답 구조는 `GET /api/videos`와 같은 `videos`, `categories`, `hasNext` 형식입니다. `categories`는 빈 배열입니다.
+시청 기록은 로그인한 회원의 조회 수 증가 요청(20번)에서 쌓입니다. 같은 영상은 한 줄이며, 다시 보면 맨 앞으로 올라옵니다.
+숨김·삭제 영상과 탈퇴한 회원이 등록한 영상은 목록에서 제외됩니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | page가 음수이거나 숫자가 아님 |
+| 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
+
+### 37) 내 오답 노트 — GET /api/users/me/wrong-notes
+
+세션 로그인 필요. 로그인한 회원이 틀린 문항을 마지막으로 틀린 시각의 최신순으로 12개씩 조회합니다.
+
+| Query | 타입 | 필수 | 기본값 | 내용 |
+| --- | --- | --- | --- | --- |
+| page | integer | X | 0 | 0부터 시작하는 페이지 번호 |
+
+**Response — 200 OK**
+
+```json
+{
+  "notes": [
+    {
+      "quizId": 7,
+      "question": "INNER JOIN 결과에 포함되는 행은?",
+      "options": ["양쪽 모두 일치하는 행", "왼쪽 테이블 전체", "오른쪽 테이블 전체", "모든 조합"],
+      "answerNo": 1,
+      "explanation": "INNER JOIN은 조인 조건이 양쪽에서 일치하는 행만 남긴다",
+      "tagName": "JOIN",
+      "videoId": 3,
+      "videoTitle": "SQL JOIN 3분 정리",
+      "thumbnailUrl": "/api/videos/3/thumbnail",
+      "wrongCount": 2,
+      "lastWrongAt": "2026-11-07T14:20:00"
+    }
+  ],
+  "hasNext": false
+}
+```
+
+| 필드 | 타입 | 내용 |
+| --- | --- | --- |
+| quizId | integer(int64) | 문항 번호 |
+| question | string | 문제 |
+| options | string[] | 보기 4개, 배열 순서가 1~4번 |
+| answerNo | integer | 정답 보기 번호(1~4). 본인이 이미 푼 문항이라 함께 반환 |
+| explanation | string \| null | 해설 |
+| tagName | string | 개념 태그 |
+| videoId | integer(int64) | 문항이 속한 영상 번호 |
+| videoTitle | string | 영상 제목 |
+| thumbnailUrl | string \| null | 썸네일 주소, 없으면 null |
+| wrongCount | integer | 이 문항을 틀린 횟수(`quiz_attempt` 오답 기록 수) |
+| lastWrongAt | string(date-time) | 마지막으로 틀린 시각 |
+
+오답은 퀴즈 채점(18번)에서 틀릴 때 문항마다 한 줄로 쌓입니다. 나중에 맞혀도 목록에서 빠지지 않습니다.
+숨김·삭제 영상과 탈퇴한 회원이 등록한 영상의 문항은 목록에서 제외됩니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | page가 음수이거나 숫자가 아님 |
+| 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |

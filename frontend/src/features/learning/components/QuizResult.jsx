@@ -31,15 +31,15 @@ export default function QuizResult({ quiz, result, isLastQuiz, onNext, onRetry, 
 
       <div className="lp-actions">
         {result.correct ? (
-          <button type="button" className="lp-btn lp-btn--primary" onClick={onNext}>
+          <button type="button" className="lp-btn btn-primary" onClick={onNext}>
             {nextLabel}
           </button>
         ) : (
           <>
-            <button type="button" className="lp-btn" onClick={onSkip}>
+            <button type="button" className="lp-btn btn-secondary" onClick={onSkip}>
               넘어가기
             </button>
-            <button type="button" className="lp-btn lp-btn--primary" onClick={onRetry}>
+            <button type="button" className="lp-btn btn-primary" onClick={onRetry}>
               다시 풀기
             </button>
           </>

@@ -1,5 +1,8 @@
 package com.team2.edu.video.service;
 
+import com.team2.edu.quiz.dto.QuizCreateRequest;
+import com.team2.edu.quiz.entity.Quiz;
+import com.team2.edu.quiz.repository.QuizRepository;
 import com.team2.edu.user.entity.User;
 import com.team2.edu.user.repository.UserRepository;
 import com.team2.edu.video.dto.VideoUploadRequest;
@@ -10,6 +13,7 @@ import com.team2.edu.video.repository.CategoryRepository;
 import com.team2.edu.video.repository.ConceptTagRepository;
 import com.team2.edu.video.repository.VideoRepository;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +41,7 @@ class VideoUploadServiceTests {
     private final ConceptTagRepository tags = mock(ConceptTagRepository.class);
     private final VideoRepository videos = mock(VideoRepository.class);
     private final VideoStorageService storage = mock(VideoStorageService.class);
+    private final QuizRepository quizzes = mock(QuizRepository.class);
     private final User creator = mock(User.class);
     private final Category category = mock(Category.class);
     private final ConceptTag tag = mock(ConceptTag.class);
@@ -47,7 +52,7 @@ class VideoUploadServiceTests {
 
     @BeforeEach
     void setUp() {
-        VideoUploadService target = new VideoUploadService(users, categories, tags, videos, storage);
+        VideoUploadService target = new VideoUploadService(users, categories, tags, videos, storage, quizzes);
         ProxyFactory proxy = new ProxyFactory(target);
         TransactionInterceptor interceptor = new TransactionInterceptor();
         interceptor.setTransactionManager(transactions);
@@ -76,6 +81,35 @@ class VideoUploadServiceTests {
         assertEquals("SQL JOIN", response.title());
         assertEquals("saved.mp4", response.videoKey());
         verify(storage, never()).delete(any());
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    void savesQuizzesWithVideoTag() {
+        var withQuizzes = new VideoUploadRequest("SQL JOIN", null, 1, 1, 60, List.of(
+                new QuizCreateRequest(" 문제1 ", List.of(" a ", "b", "c", "d"), 2, " 해설 "),
+                new QuizCreateRequest("문제2", List.of("a", "b", "c", "d"), 4, " ")));
+        service.upload("learner@example.com", file, withQuizzes, null);
+
+        ArgumentCaptor<List<Quiz>> saved = ArgumentCaptor.forClass(List.class);
+        verify(quizzes).saveAll(saved.capture());
+        assertEquals(2, saved.getValue().size());
+        Quiz first = saved.getValue().get(0);
+        assertSame(tag, first.getTag());
+        assertEquals("문제1", first.getQuestion());
+        assertEquals(List.of("a", "b", "c", "d"), first.getOptions());
+        assertEquals(2, first.getAnswerNo());
+        assertEquals("해설", first.getExplanation());
+        assertNull(saved.getValue().get(1).getExplanation());
+    }
+
+    @Test
+    void removesStoredFileWhenQuizWriteFails() throws IOException {
+        when(quizzes.saveAll(any())).thenThrow(new DataIntegrityViolationException("test DB failure"));
+        assertThrows(DataIntegrityViolationException.class, () -> service.upload("learner@example.com", file,
+                new VideoUploadRequest("SQL JOIN", null, 1, 1, 60,
+                        List.of(new QuizCreateRequest("문제", List.of("a", "b", "c", "d"), 1, null))), null));
+        verify(storage).delete("saved.mp4");
     }
 
     @Test

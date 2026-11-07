@@ -1,8 +1,10 @@
 import httpClient from './httpClient'
 
-export async function getVideos(page = 0, categoryId = '') {
+export async function getVideos(page = 0, categoryId = '', keyword = '') {
   const { data } = await httpClient.get('/api/videos', {
-    params: { page, ...(categoryId ? { categoryId } : {}) },
+    params: { page, ...(categoryId ? { categoryId } : {}), 
+                    ...(keyword ? { keyword } : {}),},
+    
   })
   return withThumbnails(data)
 }

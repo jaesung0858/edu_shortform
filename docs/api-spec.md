@@ -1,6 +1,6 @@
 # 교육용 숏폼 플랫폼 API 명세서
 
-작성 기준: 2026.11.05 / 현재 구현된 코드 기준
+작성 기준: 2026.11.06 / 현재 구현된 코드 기준
 
 현재 구현된 회원, 관리자, 영상 업로드·검색·조회·삭제, 좋아요, 퀴즈·채점·추천 API를 정리했습니다.
 
@@ -44,7 +44,7 @@
 | 17 | GET | `/api/videos/{videoId}/quizzes` | 영상별 퀴즈 조회 | 불필요 |
 | 18 | POST | `/api/quizzes/{quizId}/answer` | 퀴즈 채점·오답 기록 | 필요 |
 | 19 | GET | `/api/videos/{videoId}/recommendations` | 관련 영상 추천 | 필요 |
-| 20 | POST | `/api/videos/{videoId}/views` | 조회 수 증가 | 불필요 |
+| 20 | POST | `/api/videos/{videoId}/views` | 조회 수 증가·시청 기록 | 불필요 (로그인 시 시청 기록 저장) |
 | 21 | GET | `/api/videos/{videoId}/like` | 내 좋아요 상태 | 필요 |
 | 22 | PUT | `/api/videos/{videoId}/like` | 좋아요 | 필요 |
 | 23 | DELETE | `/api/videos/{videoId}/like` | 좋아요 취소 | 필요 |
@@ -58,7 +58,9 @@
 | 31 | GET | `/api/admin/videos/{videoId}` | 영상 상세 조회 | ADMIN |
 | 32 | PATCH | `/api/admin/videos/{videoId}` | 영상 정보·공개 상태 수정 | ADMIN |
 | 33 | DELETE | `/api/admin/videos/{videoId}` | 영상 삭제 | ADMIN |
-
+| 34 | PATCH | `/api/users/me` | 내 닉네임 수정 | 필요 |
+| 35 | PATCH | `/api/users/me/password` | 내 비밀번호 변경 | 필요 |
+| 36 | DELETE | `/api/users/me` | 회원 탈퇴 | 필요 |
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
 ### 공통 오류 응답
@@ -397,6 +399,11 @@ username=member%40example.com&password=Example123%21
 | categoryId | integer(int32) | O | 양수, DB에 존재하는 카테고리 |
 | tagId | integer(int32) | O | 양수, 선택한 카테고리에 속하는 개념 태그 |
 | durationSec | integer(int32) | O | 재생 길이(초), 1 이상 |
+| quizzes | array | X | 함께 등록할 퀴즈, 최대 2문항. 생략·null·빈 배열이면 퀴즈 없이 등록 |
+| quizzes[].question | string | O | 공백만 입력 불가, 최대 500자 |
+| quizzes[].options | string[] | O | 보기 정확히 4개(순서대로 1~4번), 각 보기 공백만 입력 불가·최대 200자 |
+| quizzes[].answerNo | integer | O | 정답 보기 번호 1~4 |
+| quizzes[].explanation | string | X | 해설, 최대 1,000자 |
 
 ```json
 {
@@ -404,7 +411,15 @@ username=member%40example.com&password=Example123%21
   "description": "INNER JOIN의 기본 개념을 설명합니다.",
   "categoryId": 1,
   "tagId": 1,
-  "durationSec": 33
+  "durationSec": 33,
+  "quizzes": [
+    {
+      "question": "INNER JOIN 결과에 포함되는 행은?",
+      "options": ["양쪽 모두 일치하는 행", "왼쪽 테이블 전체", "오른쪽 테이블 전체", "모든 조합"],
+      "answerNo": 1,
+      "explanation": "INNER JOIN은 조인 조건이 양쪽에서 일치하는 행만 남깁니다."
+    }
+  ]
 }
 ```
 
@@ -431,11 +446,12 @@ username=member%40example.com&password=Example123%21
 | videoKey | string | UUID로 생성한 저장 파일명. 재생 URL은 아님 |
 
 업로더는 로그인 회원이며, 새 영상의 상태는 `PUBLIC`입니다. 썸네일 없이 등록할 수도 있습니다.
+퀴즈는 영상과 같은 트랜잭션에 저장하며, 퀴즈의 개념 태그는 영상의 `tagId`를 그대로 씁니다. 문제·보기·해설의 앞뒤 공백은 제거하고 빈 해설은 null로 저장합니다.
 DB 등록이 롤백되면 저장한 영상·썸네일 파일을 정리합니다. 정리 실패 시에는 서버 로그를 남깁니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
-| 400 | file·request 누락, 빈 파일·썸네일, 필수값·길이·양수 제한 위반, 카테고리와 태그 불일치 |
+| 400 | file·request 누락, 빈 파일·썸네일, 필수값·길이·양수 제한 위반, 카테고리와 태그 불일치, 퀴즈 3문항 이상·보기 4개 아님·정답 번호 1~4 밖 |
 | 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
 | 404 | 카테고리 또는 개념 태그가 없음 |
 | 413 | 영상 100MB, 썸네일 1MB 또는 전체 요청 102MB 초과 |
@@ -834,9 +850,9 @@ Cookie: JSESSIONID=...
 
 담당: 박재성
 
-### 20) 조회 수 증가 — POST /api/videos/{videoId}/views
+### 20) 조회 수 증가·시청 기록 — POST /api/videos/{videoId}/views
 
-인증 불필요. 공개 영상만 가능합니다. 요청 본문 없음.
+인증 불필요. 로그인한 상태면 시청 기록도 저장합니다. 공개 영상만 가능합니다. 요청 본문 없음.
 
 **Request Path**
 
@@ -857,7 +873,10 @@ Cookie: JSESSIONID=...
 
 호출 한 번당 1 증가합니다. 동일 회원·브라우저의 중복 시청을 구분하지 않습니다.
 프론트에서는 재생이 시작될 때 호출하며, 일시정지 후 재개나 구간 이동마다 반복 호출하지 않도록 연결해야 합니다.
-영상 목록·상세·파일 GET 및 Range 요청은 집계를 증가시키지 않습니다. 이 API가 시청 기록을 저장하는 것은 아닙니다.
+영상 목록·상세·파일 GET 및 Range 요청은 집계를 증가시키지 않습니다.
+
+로그인한 회원이면 `watch_history`에 (회원, 영상) 한 행을 남깁니다. 이미 본 영상이면 행을 추가하지 않고 `watched_at`만 갱신합니다.
+비로그인 요청이나 삭제된 회원의 세션이면 조회 수만 증가합니다. 관련 영상 추천(#19)은 이 기록으로 이미 본 영상을 제외합니다.
 
 | 오류 코드 | 발생 조건 |
 | --- | --- |
@@ -1127,3 +1146,84 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 400 | 영상 번호가 양의 정수가 아님 |
 | 404 | 영상이 없거나 이미 삭제됨 |
 
+## 11. 회원 정보 관리
+
+로그인한 회원 본인의 정보를 바꿉니다. 회원 번호를 보내지 않고 세션의 로그인 회원을 기준으로 처리합니다.
+비밀번호가 틀린 경우는 로그인 만료와 구분하기 위해 401이 아니라 400으로 응답합니다.
+
+### 33) 내 닉네임 수정 — PATCH /api/users/me
+
+세션 로그인 필요. `application/json` 본문을 전달합니다.
+
+| 필드 | 타입 | 필수 | 제한 |
+| --- | --- | --- | --- |
+| nickname | string | O | 공백만 입력 불가, 최대 30자. 앞뒤 공백은 제거 |
+
+```json
+{ "nickname": "새닉네임" }
+```
+
+**Response — 200 OK**: 4번 `GET /api/users/me`와 같은 형식으로 변경 후 정보를 반환합니다.
+
+```json
+{
+  "userId": 4,
+  "email": "member@example.com",
+  "nickname": "새닉네임",
+  "role": "USER"
+}
+```
+
+지금 닉네임과 같은 값을 보내면 변경 없이 200을 반환합니다. 이메일은 로그인 아이디라 변경하지 않습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 닉네임 누락, 공백만 입력, 30자 초과 |
+| 401 | 로그인하지 않음, 세션 만료, 삭제된 회원 |
+| 409 | 다른 회원과 닉네임 중복. 삭제된 계정의 닉네임도 예약됨 |
+
+### 34) 내 비밀번호 변경 — PATCH /api/users/me/password
+
+세션 로그인 필요. `application/json` 본문을 전달합니다.
+
+| 필드 | 타입 | 필수 | 제한 |
+| --- | --- | --- | --- |
+| currentPassword | string | O | 현재 비밀번호 |
+| newPassword | string | O | 8~24자, 영문·숫자·특수문자만. 현재 비밀번호와 달라야 함 (회원가입과 같은 규칙) |
+
+```json
+{ "currentPassword": "EduTest123!", "newPassword": "NewPass123!" }
+```
+
+**Response — 204 No Content**
+
+현재 로그인은 유지되며 다음 로그인부터 새 비밀번호를 사용합니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 현재 비밀번호 불일치, 새 비밀번호 규칙 위반, 현재와 같은 비밀번호, 필수값 누락 |
+| 401 | 로그인하지 않음, 세션 만료, 삭제된 회원 |
+
+### 35) 회원 탈퇴 — DELETE /api/users/me
+
+세션 로그인 필요. 본인 확인을 위해 `application/json` 본문으로 비밀번호를 전달합니다.
+
+| 필드 | 타입 | 필수 | 제한 |
+| --- | --- | --- | --- |
+| password | string | O | 현재 비밀번호 |
+
+```json
+{ "password": "EduTest123!" }
+```
+
+**Response — 204 No Content**
+
+`users.deleted_at`에 탈퇴 시각을 기록하고 세션을 종료합니다(로그아웃). 회원 행은 지우지 않습니다.
+이후 같은 계정으로 로그인할 수 없고, 탈퇴한 회원의 영상은 목록·검색·재생·추천에서 제외됩니다. 좋아요·시청 기록·퀴즈 풀이 기록은 유지됩니다.
+탈퇴한 계정의 이메일·닉네임은 다시 가입에 사용할 수 없습니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | 비밀번호 누락 또는 불일치 |
+| 401 | 로그인하지 않음, 세션 만료, 이미 삭제된 회원 |
+| 403 | 관리자 계정은 탈퇴할 수 없음 |

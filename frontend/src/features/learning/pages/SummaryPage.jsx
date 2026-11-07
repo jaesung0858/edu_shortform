@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { getNextVideoId } from '../api/learningApi'
 import { resetSession, summarizeSession } from '../store/learningSession'
 import '../learning.css'
@@ -18,9 +18,6 @@ export default function SummaryPage() {
   return (
     <div className="lp-page">
       <header className="lp-header">
-        <Link className="lp-btn lp-btn--ghost" to="/home">
-          홈
-        </Link>
         <span className="lp-header__title">학습 결과</span>
       </header>
 
@@ -64,10 +61,10 @@ export default function SummaryPage() {
           )}
 
           <div className="lp-actions">
-            <button type="button" className="lp-btn" onClick={() => navigate(-1)}>
+            <button type="button" className="lp-btn btn-secondary" onClick={() => navigate(-1)}>
               이어서 학습
             </button>
-            <button type="button" className="lp-btn lp-btn--primary" onClick={startOver}>
+            <button type="button" className="lp-btn btn-primary" onClick={startOver}>
               처음부터 다시
             </button>
           </div>

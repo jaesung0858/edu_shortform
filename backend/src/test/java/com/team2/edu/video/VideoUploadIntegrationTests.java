@@ -1,5 +1,6 @@
 package com.team2.edu.video;
 
+import com.team2.edu.quiz.repository.QuizRepository;
 import com.team2.edu.user.entity.User;
 import com.team2.edu.user.repository.UserRepository;
 import com.jayway.jsonpath.JsonPath;
@@ -51,6 +52,7 @@ class VideoUploadIntegrationTests {
     @Autowired CategoryRepository categories;
     @Autowired ConceptTagRepository tags;
     @Autowired VideoRepository videos;
+    @Autowired QuizRepository quizzes;
     @Autowired EntityManager entityManager;
     @Autowired WebApplicationContext webContext;
 
@@ -87,7 +89,9 @@ class VideoUploadIntegrationTests {
         var thumbnail = new MockMultipartFile("thumbnail", "frame.jpg", "image/jpeg", imageBytes.toByteArray());
 
         String json = """
-                {"title":"업로드 테스트","description":"테스트용","categoryId":%d,"tagId":%d,"durationSec":60}
+                {"title":"업로드 테스트","description":"테스트용","categoryId":%d,"tagId":%d,"durationSec":60,
+                 "quizzes":[{"question":"첫 문제","options":["a","b","c","d"],"answerNo":2,"explanation":"해설"},
+                            {"question":"둘째 문제","options":["e","f","g","h"],"answerNo":4}]}
                 """.formatted(category.getId(), tag.getId());
         var metadata = new MockMultipartFile("request", "", "application/json", json.getBytes(StandardCharsets.UTF_8));
         var result = MockMvcBuilders.webAppContextSetup(webContext).build()
@@ -118,6 +122,13 @@ class VideoUploadIntegrationTests {
         mvc.perform(get("/api/videos/" + uploadedId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.videoUrl").value("/api/videos/" + uploadedId + "/content"));
+        mvc.perform(get("/api/videos/" + uploadedId + "/quizzes"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].question").value("첫 문제"))
+                .andExpect(jsonPath("$[1].options[3]").value("h"));
+        assertTrue(quizzes.findByVideoIdOrderByIdAsc(uploadedId).stream()
+                .allMatch(quiz -> quiz.getTag().getId().equals(tag.getId())));
         mvc.perform(get("/api/videos/" + uploadedId + "/thumbnail"))
                 .andExpect(status().isOk()).andExpect(content().contentType("image/jpeg"))
                 .andExpect(content().bytes(Files.readAllBytes(uploadedThumbnail)));

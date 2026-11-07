@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,10 +30,13 @@ public class VideoInteractionController {
         this.interactionService = interactionService;
     }
 
-    @Operation(summary = "영상 조회 수 증가", description = "공개 영상의 재생 시작 시 호출합니다. 요청당 1 증가하며 중복 시청을 구분하지 않습니다.")
+    @Operation(summary = "영상 조회 수 증가", description = "공개 영상의 재생 시작 시 호출합니다. 요청당 1 증가하며 중복 시청을 구분하지 않습니다. "
+            + "로그인한 회원이면 시청 기록도 남기며, 이미 본 영상은 시청 시각만 갱신합니다.")
     @PostMapping("/api/videos/{videoId}/views")
-    public VideoViewResponse addView(@PathVariable @Positive Long videoId) {
-        return interactionService.addView(videoId);
+    public VideoViewResponse addView(@PathVariable @Positive Long videoId, Authentication authentication) {
+        // 비로그인 요청이면 authentication이 null
+        boolean member = authentication != null && !(authentication instanceof AnonymousAuthenticationToken);
+        return interactionService.addView(videoId, member ? authentication.getName() : null);
     }
 
     @Operation(summary = "내 좋아요 상태", description = "공개 영상의 좋아요 여부와 전체 좋아요 수를 조회합니다.")

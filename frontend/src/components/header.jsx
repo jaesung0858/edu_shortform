@@ -1,11 +1,20 @@
 import './header.css'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import logo from '../assets/logo.png'
 
 function Header({ user, loading, onLogout, loggingOut }) {
   const [search, setSearch] = useState('')
+  const navigate = useNavigate()
 
+  function handleSearch() {
+    const keyword = search.trim()
+
+    if (!keyword) return
+
+    navigate(`/explore?q=${encodeURIComponent(keyword)}`)
+  }
+  
   return (
     <header className="site-header">
       <Link to="/home"><img src={logo} alt="로고" className="logo" /></Link>
@@ -16,7 +25,8 @@ function Header({ user, loading, onLogout, loggingOut }) {
           value={search}
           onChange={event => setSearch(event.target.value)}
         />
-        <button type="button" onClick={() => console.log(search)}>검색</button>
+        <button type="button" className="btn-secondary"
+          onClick={handleSearch}>검색</button>
       </div>
       {loading ? (
         <span>회원 정보 확인 중…</span>
@@ -28,7 +38,13 @@ function Header({ user, loading, onLogout, loggingOut }) {
           </button>
         </>
       ) : (
-        <Link to="/login">로그인</Link>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={() => navigate('/login')}
+        >
+          로그인
+        </button>
       )}
     </header>
   )

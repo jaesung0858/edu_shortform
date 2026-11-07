@@ -37,9 +37,8 @@ export async function getVideoCategories() {
 
 /**
  * 영상 등록. 파일 업로드와 영상 정보 저장을 한 번에 보낸다.
- * request: { title, description, categoryId, tagId, durationSec, quizzes: [{ question, option1~4, answerNo, explanation }] }
- * TODO 백엔드: PR #7의 VideoUploadRequest 에는 아직 quizzes 가 없어 서버가 무시한다.
- *   DB README대로 영상·퀴즈를 같은 트랜잭션에 저장하려면 VideoUploadRequest 에 quizzes 필드를 추가해야 한다.
+ * request: { title, description, categoryId, tagId, durationSec, quizzes: [{ question, options: [4개], answerNo, explanation }] }
+ * 서버가 영상과 퀴즈(최대 2문항)를 같은 트랜잭션에 저장한다.
  */
 export async function uploadVideo({ file, thumbnail, request }, onProgress) {
   if (USE_MOCK) {

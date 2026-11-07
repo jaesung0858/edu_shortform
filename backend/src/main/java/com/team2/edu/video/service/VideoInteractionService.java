@@ -5,6 +5,7 @@ import com.team2.edu.user.repository.UserRepository;
 import com.team2.edu.video.dto.AdminVideoUpdateRequest;
 import com.team2.edu.video.dto.VideoDetailResponse;
 import com.team2.edu.video.dto.VideoLikeResponse;
+import com.team2.edu.video.dto.VideoUpdateRequest;
 import com.team2.edu.video.dto.VideoViewResponse;
 import com.team2.edu.video.entity.UserVideoId;
 import com.team2.edu.video.entity.Video;
@@ -94,16 +95,23 @@ public class VideoInteractionService {
     }
 
     @Transactional
-    public VideoDetailResponse updateAsAdmin(Long videoId, AdminVideoUpdateRequest request) {
-        if (request.title() == null && request.description() == null && request.status() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정할 항목이 필요합니다.");
-        }
-        if (request.title() != null && request.title().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "제목을 입력해주세요.");
-        }
+    public VideoDetailResponse update(Long videoId, String email, VideoUpdateRequest request) {
+        User user = activeUser(email);
         Video video = nonDeletedVideoForUpdate(videoId);
-        VideoStatus status = request.status() == null ? null : VideoStatus.valueOf(request.status());
-        video.updateMetadata(request.title(), request.description(), status);
+        if (video.getCreator().isDeleted()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다.");
+        }
+        if (!video.getCreator().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "작성자만 수정할 수 있습니다.");
+        }
+        updateMetadata(video, request.title(), request.description(), request.status());
+        return VideoQueryService.toDetail(video);
+    }
+
+    @Transactional
+    public VideoDetailResponse updateAsAdmin(Long videoId, AdminVideoUpdateRequest request) {
+        Video video = nonDeletedVideoForUpdate(videoId);
+        updateMetadata(video, request.title(), request.description(), request.status());
         return VideoQueryService.toDetail(video);
     }
 
@@ -121,6 +129,17 @@ public class VideoInteractionService {
         return videoRepository.findForUpdate(videoId)
                 .filter(video -> video.getStatus() == VideoStatus.PUBLIC && !video.getCreator().isDeleted())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "영상을 찾을 수 없습니다."));
+    }
+
+    private void updateMetadata(Video video, String title, String description, String statusValue) {
+        if (title == null && description == null && statusValue == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "수정할 항목이 필요합니다.");
+        }
+        if (title != null && title.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "제목을 입력해주세요.");
+        }
+        VideoStatus status = statusValue == null ? null : VideoStatus.valueOf(statusValue);
+        video.updateMetadata(title, description, status);
     }
 
     private User activeUser(String email) {

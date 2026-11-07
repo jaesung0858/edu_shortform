@@ -248,6 +248,61 @@ class VideoInteractionIntegrationTests {
     }
 
     @Test
+    void ownerCanUpdateOwnVideoMetadataAndVisibility() throws Exception {
+        var owner = member();
+        var video = video(owner);
+        String path = "/api/videos/" + video.getId();
+
+        mvc.perform(patch(path).session(session(owner)).contentType("application/json")
+                        .content("""
+                                {"title":"  수정한 제목  ","description":"수정한 설명","status":"HIDDEN"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.videoId").value(video.getId()))
+                .andExpect(jsonPath("$.title").value("수정한 제목"))
+                .andExpect(jsonPath("$.description").value("수정한 설명"))
+                .andExpect(jsonPath("$.status").value("HIDDEN"));
+
+        entityManager.flush();
+        entityManager.clear();
+        var updated = videos.findById(video.getId()).orElseThrow();
+        assertThat(updated.getTitle()).isEqualTo("수정한 제목");
+        assertThat(updated.getDescription()).isEqualTo("수정한 설명");
+        assertThat(updated.getStatus()).isEqualTo(VideoStatus.HIDDEN);
+    }
+
+    @Test
+    void videoUpdateRequiresOwnerAndValidFields() throws Exception {
+        var owner = member();
+        var other = member();
+        var video = video(owner);
+        String path = "/api/videos/" + video.getId();
+
+        mvc.perform(patch(path).contentType("application/json").content("{\"title\":\"수정\"}"))
+                .andExpect(status().isUnauthorized());
+        mvc.perform(patch(path).session(session(other)).contentType("application/json")
+                        .content("{\"title\":\"수정\"}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(patch(path).session(session(owner)).contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch(path).session(session(owner)).contentType("application/json")
+                        .content("{\"title\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch(path).session(session(owner)).contentType("application/json")
+                        .content("{\"status\":\"DELETED\"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/videos/0").session(session(owner)).contentType("application/json")
+                        .content("{\"title\":\"수정\"}"))
+                .andExpect(status().isBadRequest());
+
+        ReflectionTestUtils.setField(video, "status", VideoStatus.DELETED);
+        videos.saveAndFlush(video);
+        mvc.perform(patch(path).session(session(owner)).contentType("application/json")
+                        .content("{\"title\":\"수정\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     void concurrentRequestsDoNotDuplicateLikesOrLoseCounts() throws Exception {
         var transactions = new TransactionTemplate(transactionManager);

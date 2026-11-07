@@ -1,18 +1,23 @@
 package com.team2.edu.video.controller;
 
+import com.team2.edu.video.dto.VideoDetailResponse;
 import com.team2.edu.video.dto.VideoLikeResponse;
+import com.team2.edu.video.dto.VideoUpdateRequest;
 import com.team2.edu.video.dto.VideoViewResponse;
 import com.team2.edu.video.service.VideoInteractionService;
 import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -50,6 +55,15 @@ public class VideoInteractionController {
     @DeleteMapping("/api/videos/{videoId}/like")
     public VideoLikeResponse unlike(@PathVariable @Positive Long videoId, Authentication authentication) {
         return interactionService.unlike(videoId, authentication.getName());
+    }
+
+    @Operation(summary = "내 영상 정보 수정",
+            description = "작성자만 제목·설명·공개 상태(PUBLIC/HIDDEN)를 수정할 수 있습니다.")
+    @PatchMapping("/api/videos/{videoId}")
+    public VideoDetailResponse update(@PathVariable @Positive Long videoId,
+                                      @Valid @RequestBody VideoUpdateRequest request,
+                                      Authentication authentication) {
+        return interactionService.update(videoId, authentication.getName(), request);
     }
 
     @Operation(summary = "영상 삭제", description = "작성자만 삭제할 수 있습니다. 삭제 상태로 바꾸며 파일과 연결된 학습 기록은 유지합니다.")

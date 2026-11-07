@@ -49,17 +49,18 @@
 | 22 | PUT | `/api/videos/{videoId}/like` | 좋아요 | 필요 |
 | 23 | DELETE | `/api/videos/{videoId}/like` | 좋아요 취소 | 필요 |
 | 24 | GET | `/api/users/me/liked-videos` | 내가 좋아요한 영상 목록 | 필요 |
-| 25 | DELETE | `/api/videos/{videoId}` | 내 영상 삭제 | 필요 |
-| 26 | GET | `/api/admin/users/{userId}` | 회원 상세 조회 | ADMIN |
-| 27 | PATCH | `/api/admin/users/{userId}` | 회원 닉네임 수정 | ADMIN |
-| 28 | DELETE | `/api/admin/users/{userId}` | 회원 삭제 | ADMIN |
-| 29 | GET | `/api/admin/videos` | 영상 목록·제목 검색 | ADMIN |
-| 30 | GET | `/api/admin/videos/{videoId}` | 영상 상세 조회 | ADMIN |
-| 31 | PATCH | `/api/admin/videos/{videoId}` | 영상 정보·공개 상태 수정 | ADMIN |
-| 32 | DELETE | `/api/admin/videos/{videoId}` | 영상 삭제 | ADMIN |
-| 33 | PATCH | `/api/users/me` | 내 닉네임 수정 | 필요 |
-| 34 | PATCH | `/api/users/me/password` | 내 비밀번호 변경 | 필요 |
-| 35 | DELETE | `/api/users/me` | 회원 탈퇴 | 필요 |
+| 25 | PATCH | `/api/videos/{videoId}` | 내 영상 정보·공개 상태 수정 | 필요 |
+| 26 | DELETE | `/api/videos/{videoId}` | 내 영상 삭제 | 필요 |
+| 27 | GET | `/api/admin/users/{userId}` | 회원 상세 조회 | ADMIN |
+| 28 | PATCH | `/api/admin/users/{userId}` | 회원 닉네임 수정 | ADMIN |
+| 29 | DELETE | `/api/admin/users/{userId}` | 회원 삭제 | ADMIN |
+| 30 | GET | `/api/admin/videos` | 영상 목록·제목 검색 | ADMIN |
+| 31 | GET | `/api/admin/videos/{videoId}` | 영상 상세 조회 | ADMIN |
+| 32 | PATCH | `/api/admin/videos/{videoId}` | 영상 정보·공개 상태 수정 | ADMIN |
+| 33 | DELETE | `/api/admin/videos/{videoId}` | 영상 삭제 | ADMIN |
+| 34 | PATCH | `/api/users/me` | 내 닉네임 수정 | 필요 |
+| 35 | PATCH | `/api/users/me/password` | 내 비밀번호 변경 | 필요 |
+| 36 | DELETE | `/api/users/me` | 회원 탈퇴 | 필요 |
 로그인·로그아웃은 Spring Security에서 처리하므로 현재 Swagger 목록에는 표시되지 않습니다. 실제 연동에 사용하는 API라 함께 기재했습니다.
 
 ### 공통 오류 응답
@@ -845,7 +846,7 @@ Cookie: JSESSIONID=...
 | 401 | 로그인하지 않았거나 세션 만료, 탈퇴한 회원 |
 | 404 | 기준 영상이 없거나 공개 상태가 아님 |
 
-## 9. 조회 수·좋아요·영상 삭제
+## 9. 조회 수·좋아요·영상 수정·삭제
 
 담당: 박재성
 
@@ -962,7 +963,40 @@ Cookie: JSESSIONID=로그인한_세션값
 | 400 | page가 음수이거나 숫자가 아님 |
 | 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
 
-### 25) 내 영상 삭제 — DELETE /api/videos/{videoId}
+### 25) 내 영상 수정 — PATCH /api/videos/{videoId}
+
+세션 로그인 필요. 영상 작성자만 본인의 공개·숨김 영상을 수정할 수 있습니다.
+
+**Request — application/json**
+
+```json
+{
+  "title": "수정한 영상 제목",
+  "description": "수정한 영상 설명",
+  "status": "HIDDEN"
+}
+```
+
+| 필드 | 타입 | 필수 | 제한 |
+| --- | --- | --- | --- |
+| title | string | X | 입력 시 공백만 사용할 수 없으며 최대 100자 |
+| description | string | X | 최대 1000자, 빈 문자열로 설명 제거 가능 |
+| status | string | X | `PUBLIC` 또는 `HIDDEN` |
+
+세 필드 중 하나 이상을 보내야 합니다. 전달하지 않은 필드는 기존 값을 유지합니다.
+
+**Response — 200 OK**
+
+수정된 영상의 `VideoDetailResponse`를 반환합니다.
+
+| 오류 코드 | 발생 조건 |
+| --- | --- |
+| 400 | videoId·필드 형식 오류, 수정할 필드 없음, 빈 제목, 허용하지 않은 상태 |
+| 401 | 로그인하지 않음, 세션 만료, 로그인 회원이 없거나 삭제됨 |
+| 403 | 다른 회원이 등록한 영상 |
+| 404 | 없는 영상, 이미 삭제된 영상, 삭제된 회원의 영상 |
+
+### 26) 내 영상 삭제 — DELETE /api/videos/{videoId}
 
 세션 로그인 필요. 영상 작성자만 삭제할 수 있습니다. 관리자도 다른 회원의 영상을 이 API로 삭제할 수 없습니다.
 
@@ -996,6 +1030,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 - 좋아요 표시: 로그인 후 `GET /api/videos/{videoId}/like` 조회
 - 좋아요 버튼: `PUT`, 취소 버튼: `DELETE /api/videos/{videoId}/like`
 - 마이페이지 좋아요 목록: `GET /api/users/me/liked-videos?page=0`
+- 내 영상 수정: `PATCH /api/videos/{videoId}` 후 상세·목록 갱신
 - 내 영상 삭제: `DELETE /api/videos/{videoId}` 후 목록 갱신
 
 검색은 Spring Data JPA의 [조회 쿼리](https://docs.spring.io/spring-data/jpa/reference/jpa/query-methods.html), 동시 요청 처리는 [Locking](https://docs.spring.io/spring-data/jpa/reference/jpa/locking.html)을 참고했습니다.
@@ -1004,7 +1039,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 
 아래 API는 관리자 로그인 세션이 필요합니다. 미로그인은 `401`, 일반 회원은 `403`입니다. `userId`, `videoId`는 양의 정수입니다.
 
-### 26) 회원 상세 조회 — GET /api/admin/users/{userId}
+### 27) 회원 상세 조회 — GET /api/admin/users/{userId}
 
 본문 없이 회원 번호를 전달합니다. 삭제되지 않은 회원만 조회합니다.
 
@@ -1027,7 +1062,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 400 | 회원 번호가 양의 정수가 아님 |
 | 404 | 회원이 없거나 이미 삭제됨 |
 
-### 27) 회원 닉네임 수정 — PATCH /api/admin/users/{userId}
+### 28) 회원 닉네임 수정 — PATCH /api/admin/users/{userId}
 
 `application/json` 본문을 전달합니다. `nickname`은 필수이며 최대 30자입니다. 공백만 입력할 수 없고, 앞뒤 공백은 제거합니다.
 
@@ -1045,7 +1080,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 404 | 회원이 없거나 이미 삭제됨 |
 | 409 | 다른 회원과 닉네임 중복. 삭제된 계정의 닉네임도 예약됨 |
 
-### 28) 회원 삭제 — DELETE /api/admin/users/{userId}
+### 29) 회원 삭제 — DELETE /api/admin/users/{userId}
 
 요청 본문 없음. **Response — 204 No Content**.
 
@@ -1057,7 +1092,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 403 | 관리자 계정을 삭제하려는 요청 |
 | 404 | 회원이 없거나 이미 삭제됨 |
 
-### 29) 영상 목록·검색 — GET /api/admin/videos
+### 30) 영상 목록·검색 — GET /api/admin/videos
 
 | 쿼리 항목 | 타입 | 기본값 | 내용 |
 | --- | --- | --- | --- |
@@ -1070,7 +1105,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | --- | --- |
 | 400 | page가 음수·정수가 아님 또는 keyword가 100자 초과 |
 
-### 30) 영상 상세 조회 — GET /api/admin/videos/{videoId}
+### 31) 영상 상세 조회 — GET /api/admin/videos/{videoId}
 
 요청 본문 없음. **Response — 200 OK**: 13번 영상 상세와 같은 필드를 반환합니다. 숨김 영상과 삭제 회원의 영상도 정보를 조회할 수 있습니다. 영상 파일·썸네일 요청에는 기존 접근 정책이 적용됩니다.
 
@@ -1079,7 +1114,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 400 | 영상 번호가 양의 정수가 아님 |
 | 404 | 영상이 없거나 이미 삭제됨 |
 
-### 31) 영상 정보 수정 — PATCH /api/admin/videos/{videoId}
+### 32) 영상 정보 수정 — PATCH /api/admin/videos/{videoId}
 
 `application/json` 본문에 바꿀 필드만 전달합니다. 최소 하나가 필요하며, 생략하거나 `null`을 보낸 필드는 유지됩니다.
 
@@ -1100,7 +1135,7 @@ DB 행, 영상·썸네일 파일과 기존 퀴즈·풀이·오답·좋아요·�
 | 400 | 영상 번호·입력값 오류, 수정할 필드 없음, 허용하지 않은 상태 |
 | 404 | 영상이 없거나 이미 삭제됨 |
 
-### 32) 영상 삭제 — DELETE /api/admin/videos/{videoId}
+### 33) 영상 삭제 — DELETE /api/admin/videos/{videoId}
 
 요청 본문 없음. **Response — 204 No Content**.
 

@@ -12,3 +12,21 @@ export async function getMyVideos(page = 0) {
     })),
   }
 }
+
+export async function getVideo(videoId) {
+  const { data } = await httpClient.get(`/api/videos/${videoId}`)
+  return {
+    ...data,
+    videoUrl: data.videoUrl ? httpClient.getUri({ url: data.videoUrl }) : null,
+    thumbnailUrl: data.thumbnailUrl ? httpClient.getUri({ url: data.thumbnailUrl }) : null,
+  }
+}
+
+export async function updateMyVideo(videoId, changes) {
+  const { data } = await httpClient.patch(`/api/videos/${videoId}`, changes)
+  return data
+}
+
+export async function deleteMyVideo(videoId) {
+  await httpClient.delete(`/api/videos/${videoId}`)
+}

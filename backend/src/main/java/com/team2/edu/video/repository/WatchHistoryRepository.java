@@ -1,7 +1,11 @@
 package com.team2.edu.video.repository;
 
 import com.team2.edu.video.entity.UserVideoId;
+import com.team2.edu.video.entity.VideoStatus;
 import com.team2.edu.video.entity.WatchHistory;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,4 +20,16 @@ public interface WatchHistoryRepository extends JpaRepository<WatchHistory, User
             on duplicate key update watched_at = now()
             """, nativeQuery = true)
     void record(@Param("userId") Long userId, @Param("videoId") Long videoId);
+
+    /** 마이페이지 시청 기록: 공개 영상만, 마지막으로 본 순 */
+    @EntityGraph(attributePaths = {"video.creator", "video.category", "video.tag"})
+    @Query("""
+            select w from WatchHistory w
+            where w.user.id = :userId and w.video.status = :status
+              and w.video.creator.deletedAt is null
+            order by w.watchedAt desc, w.id.videoId desc
+            """)
+    Slice<WatchHistory> findWatchedVideos(@Param("userId") Long userId,
+                                          @Param("status") VideoStatus status,
+                                          Pageable pageable);
 }

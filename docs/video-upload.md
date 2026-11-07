@@ -83,6 +83,7 @@ MP4 확장자와 파일 앞부분의 `ftyp` 헤더를 확인하며, 전체 파�
 | GET /api/videos/{videoId}/content | 200: MP4 전체, 206: 요청한 구간 | 400: 잘못된 번호, 404: 파일 없음·접근 불가, 416: 범위 초과 |
 | GET /api/videos/{videoId}/thumbnail | 200: JPEG 이미지 | 400: 잘못된 번호, 404: 썸네일 없음·접근 불가 |
 | GET /api/users/me/videos?page=0 | 200, 내 영상 목록과 hasNext | 400: 잘못된 page, 401: 로그인 필요 |
+| PATCH /api/videos/{videoId} | 200, 수정된 영상 정보 | 400: 잘못된 입력, 401: 로그인 필요, 403: 작성자 아님, 404: 영상 없음 |
 
 상세 응답은 videoId, title, description, creatorNickname, categoryName, tagName, viewCount, likeCount, durationSec, status, videoUrl, thumbnailUrl을 반환합니다.
 videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드를 누르면 `/videos/영상번호` 화면에서 해당 파일을 재생합니다.
@@ -92,7 +93,7 @@ videoUrl은 `/api/videos/영상번호/content` 형식입니다. 목록의 카드
 내 영상 목록은 클라이언트가 보낸 회원 번호가 아닌 로그인 세션으로 조회합니다. 공개·숨김 영상을 포함하며 12개씩 불러옵니다.
 기존 SQL 샘플 중 실제 파일이 없는 영상은 제목이 조회되더라도 재생 시 404를 반환합니다.
 
-조회 수 증가·좋아요·취소·작성자 영상 삭제 API는 [API 명세서](api-spec.md#9-조회-수좋아요영상-삭제)에 정리했습니다. 프론트 호출은 별도 연결이 필요합니다.
+조회 수 증가·좋아요·취소·작성자 영상 수정·삭제 API는 [API 명세서](api-spec.md#9-조회-수좋아요영상-수정삭제)에 정리했습니다. 프론트 호출은 별도 연결이 필요합니다.
 
 | 상태 코드 | 발생 조건 |
 | --- | --- |

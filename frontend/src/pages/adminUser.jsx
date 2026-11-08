@@ -36,7 +36,7 @@ export default function AdminUser() {
     const [keyword, setKeyword] = useState('')
     const [users, setUsers] = useState([])
     const [message, setMessage] = useState('')
-    const [editUserId, setEditUserId] = useState(null)
+    const [editUser, setEditUser] = useState(null)
     const [editNickname, setEditNickname] = useState('')
     const [deleteUserId, setDeleteUserId] = useState(null)
 
@@ -66,6 +66,11 @@ export default function AdminUser() {
 
     }
 
+    function handleEdit(user) {
+        setEditUser(user)
+        setEditNickname(user.nickname)
+    }
+
     async function handleUpdate(userId) {
         try {
             setMessage('')
@@ -81,7 +86,7 @@ export default function AdminUser() {
             )
             )
 
-            setEditUserId(null)
+            setEditUser(null)
             setEditNickname('')
             setMessage('회원 정보가 수정되었습니다.')
         } catch (error) {
@@ -89,13 +94,10 @@ export default function AdminUser() {
         }
     }
 
-    function handleEdit(user) {
-        setEditUserId(user.userId)
-        setEditNickname(user.nickname)
-    }
+
 
     function handleCancel() {
-        setEditUserId(null)
+        setEditUser(null)
         setEditNickname('')
     }
 
@@ -130,55 +132,64 @@ export default function AdminUser() {
             {users.map((user) => (
             <div className="admin-user-row" key={user.userId}>
                 <span>{user.userId}</span>
-                <span>
-                    {editUserId === user.userId ? (
-                        <input
-                        type="text"
-                        value={editNickname}
-                        onChange={(e) => setEditNickname(e.target.value)}
-                        />
-                    ) : (
-                        user.nickname
-                    )}
-                </span>
+                <span>{user.nickname}</span>    
                 <span>{user.email}</span>
                 <span>{user.role}</span>
                 <span>{user.createdAt}</span>
 
                 <span className="admin-user-actions">
-                    {editUserId === user.userId ? (
-                        <>
-                        <button type="button" className='btn-secondary' onClick={() => handleUpdate(user.userId)}>
-                            확인
-                        </button>
+                    <button
+                        type="button"
+                        className="btn-secondary"
+                        onClick={() => handleEdit(user)}
+                    >
+                        수정
+                    </button>
 
-                        <button type="button"className='btn-secondary' onClick={handleCancel}>
-                            취소
-                        </button>
-                        </>
-                    ) : (
-                        <>
-                        <button
-                            type="button"
-                            className='btn-secondary'
-                            onClick={() => handleEdit(user)}
-                        >
-                            수정
-                        </button>
-
-                        <button
-                            type="button"
-                            className="btn-danger"
-                            onClick={() => setDeleteUserId(user.userId)}
-                        >
-                            삭제
-                        </button>
-                        </>
-                    )}
+                    <button
+                        type="button"
+                        className="btn-danger"
+                        onClick={() => setDeleteUserId(user.userId)}
+                    >
+                        삭제
+                    </button>
                 </span>
             </div>
             ))}
         </div>
+
+        {editUser !== null && (
+            <div className="delete-modal-overlay">
+                <div className="delete-modal">
+                    <h3>닉네임 수정</h3>
+
+                    <input
+                        type="text"
+                        value={editNickname}
+                        onChange={(e) => setEditNickname(e.target.value)}
+                    />
+
+                    <div className="delete-modal-buttons">
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={() => handleUpdate(editUser.userId)}
+                        >
+                            확인
+                        </button>
+
+                        <button
+                            type="button"
+                            className="btn-secondary"
+                            onClick={handleCancel}
+                        >
+                            취소
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {deleteUserId !== null && (
             <div className="delete-modal-overlay">
                 <div className="delete-modal">

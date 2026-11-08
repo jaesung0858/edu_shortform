@@ -1,0 +1,136 @@
+/* 마이페이지 목록(좋아요·시청기록·오답노트) 전용 스타일. 클래스는 모두 mpl- 로 시작한다.
+   색·간격은 공통 변수(index.css)를 쓰고 기본값을 함께 적었다.
+   공통 .layout h3 / p 규칙보다 앞서야 하는 글자 규칙은 .mpl-section 아래에 둔다. */
+.mpl-section {
+  --mpl-text: var(--color-text, #1e293b);
+  --mpl-heading: var(--color-secondary, #1e3a5f);
+  --mpl-muted: var(--color-text-sub, #64748b);
+  --mpl-border: var(--color-border, #e2e8f0);
+  --mpl-surface: var(--color-surface, #ffffff);
+  --mpl-bg: var(--color-background, #f8fafc);
+  --mpl-primary: var(--color-primary, #00aaff);
+  --mpl-correct: #2fbf71;
+  --mpl-wrong: #ef4444;
+
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: var(--mpl-text);
+}
+.mpl-section .mpl-section__title { margin: 0; font-size: 18px; color: var(--mpl-heading); }
+.mpl-section .mpl-status { margin: 0; color: var(--mpl-muted); font-size: 14px; }
+.mpl-section .mpl-status p { margin: 0 0 8px; color: inherit; font-size: inherit; }
+.mpl-status a { color: var(--mpl-primary); font-weight: 600; }
+.mpl-section .mpl-muted { color: var(--mpl-muted); font-size: 13px; }
+.mpl-more { align-self: center; }
+
+/* 영상 카드 가로 목록 */
+.mpl-video-row {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 8px;
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+}
+.mpl-video-row > li { flex: 0 0 150px; min-width: 0; }
+.mpl-video {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+.mpl-video__thumb {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid var(--mpl-border);
+  background: var(--mpl-bg);
+  transition: border-color 0.2s;
+}
+.mpl-video:hover .mpl-video__thumb { border-color: var(--mpl-primary); }
+.mpl-video__title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 오답노트 */
+.mpl-note-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.mpl-note {
+  border: 1px solid var(--mpl-border);
+  border-radius: 12px;
+  background: var(--mpl-surface);
+  overflow: hidden;
+}
+.mpl-note.is-open { border-color: var(--mpl-primary); }
+.mpl-note__summary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.mpl-note__summary:hover { background: var(--mpl-bg); }
+.mpl-note__thumb {
+  flex: none;
+  width: 48px;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  border-radius: 6px;
+  background: var(--mpl-bg);
+}
+.mpl-note__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.mpl-note__question { font-weight: 600; line-height: 1.4; }
+.mpl-note__count { color: var(--mpl-wrong); font-size: 13px; font-weight: 600; }
+.mpl-note__chevron { flex: none; color: var(--mpl-muted); font-size: 12px; }
+
+.mpl-note__detail { padding: 0 12px 12px; display: flex; flex-direction: column; gap: 10px; }
+.mpl-note__options { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.mpl-note__options li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--mpl-border);
+  border-radius: 8px;
+  font-size: 14px;
+}
+.mpl-note__options li.is-answer { border-color: var(--mpl-correct); background: rgba(47, 191, 113, 0.12); }
+.mpl-note__no {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mpl-border);
+  font-size: 12px;
+}
+.is-answer .mpl-note__no { background: var(--mpl-correct); color: #fff; }
+.mpl-note__badge { margin-left: auto; color: var(--mpl-correct); font-size: 12px; font-weight: 700; }
+.mpl-note__explain { padding: 10px 12px; border-radius: 8px; background: var(--mpl-bg); font-size: 14px; }
+.mpl-section .mpl-note__explain p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: inherit; }
+.mpl-note__rewatch {
+  align-self: flex-start;
+  display: inline-flex;
+  border-radius: 8px;
+  text-decoration: none;
+}
+/* 공통 .btn-primary가 링크(<a>)에는 기본 여백을 안 줄 수 있어 대체값을 둔다. :where()라 공통 클래스가 이긴다. */
+:where(.mpl-note__rewatch) { padding: 8px 14px; background: var(--mpl-primary); color: #fff; font-weight: 600; }

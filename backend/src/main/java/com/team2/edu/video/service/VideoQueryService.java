@@ -5,8 +5,10 @@ import com.team2.edu.video.dto.VideoDetailResponse;
 import com.team2.edu.video.entity.Video;
 import com.team2.edu.video.entity.VideoLike;
 import com.team2.edu.video.entity.VideoStatus;
+import com.team2.edu.video.entity.WatchHistory;
 import com.team2.edu.video.repository.VideoLikeRepository;
 import com.team2.edu.video.repository.VideoRepository;
+import com.team2.edu.video.repository.WatchHistoryRepository;
 import com.team2.edu.user.repository.UserRepository;
 import java.util.List;
 import org.springframework.core.io.Resource;
@@ -24,14 +26,16 @@ public class VideoQueryService {
 
     private final VideoRepository videoRepository;
     private final VideoLikeRepository videoLikeRepository;
+    private final WatchHistoryRepository watchHistoryRepository;
     private final UserRepository userRepository;
     private final VideoStorageService storageService;
 
     public VideoQueryService(VideoRepository videoRepository, VideoLikeRepository videoLikeRepository,
-                             UserRepository userRepository,
+                             WatchHistoryRepository watchHistoryRepository, UserRepository userRepository,
                              VideoStorageService storageService) {
         this.videoRepository = videoRepository;
         this.videoLikeRepository = videoLikeRepository;
+        this.watchHistoryRepository = watchHistoryRepository;
         this.userRepository = userRepository;
         this.storageService = storageService;
     }
@@ -63,6 +67,17 @@ public class VideoQueryService {
         var likes = videoLikeRepository.findLikedVideos(user.getId(), VideoStatus.PUBLIC,
                 PageRequest.of(page, 12));
         return new VideoListResponse(toLikedItems(likes), List.of(), likes.hasNext());
+    }
+
+    // 로그인한 회원이 본 공개 영상을 마지막으로 본 순으로 조회
+    @Transactional(readOnly = true)
+    public VideoListResponse findWatched(String email, int page) {
+        var user = userRepository.findByEmail(email).filter(item -> !item.isDeleted())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "로그인이 필요합니다."));
+        var histories = watchHistoryRepository.findWatchedVideos(user.getId(), VideoStatus.PUBLIC,
+                PageRequest.of(page, 12));
+        return new VideoListResponse(histories.stream().map(WatchHistory::getVideo).map(this::toItem).toList(),
+                List.of(), histories.hasNext());
     }
 
     @Transactional(readOnly = true)

@@ -145,6 +145,146 @@
   font-weight: 600;
 }
 
+.my-channel-video-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.my-channel-edit-button,
+.my-channel-delete-button,
+.my-channel-dialog-primary,
+.my-channel-dialog-secondary,
+.my-channel-dialog-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 8px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.my-channel-edit-button:hover,
+.my-channel-dialog-primary:hover { opacity: 0.9; }
+
+.my-channel-edit-button:focus-visible,
+.my-channel-delete-button:focus-visible,
+.my-channel-dialog button:focus-visible,
+.my-channel-field input:focus-visible,
+.my-channel-field textarea:focus-visible,
+.my-channel-field select:focus-visible {
+  outline: 3px solid var(--accent-border);
+  outline-offset: 2px;
+}
+
+.my-channel-delete-button,
+.my-channel-dialog-danger {
+  border-color: #b42318;
+  color: #b42318;
+}
+
+.my-channel-edit-button:disabled,
+.my-channel-delete-button:disabled,
+.my-channel-dialog button:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.my-channel-action-notice {
+  margin: 0 0 20px;
+  padding: 12px 16px;
+  border: 1px solid var(--accent-border);
+  border-radius: 10px;
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.my-channel-dialog-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(12, 13, 18, 0.56);
+}
+
+.my-channel-dialog {
+  width: min(100%, 520px);
+  max-height: calc(100dvh - 40px);
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: var(--shadow);
+}
+
+.my-channel-dialog h2 {
+  margin: 0 0 20px;
+  color: var(--text-h);
+  font-size: 22px;
+}
+
+.my-channel-field {
+  display: grid;
+  gap: 7px;
+  margin-bottom: 16px;
+  color: var(--text-h);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.my-channel-field input,
+.my-channel-field textarea,
+.my-channel-field select {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-weight: 400;
+}
+
+.my-channel-field textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.my-channel-dialog-message { margin: 0 0 20px; }
+
+.my-channel-dialog-error {
+  margin: 0 0 16px;
+  color: #b42318;
+  line-height: 1.5;
+}
+
+.my-channel-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.my-channel-dialog-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.my-channel-delete-dialog > p { line-height: 1.6; }
+
 .my-channel-message,
 .my-channel-error,
 .my-channel-api-note {

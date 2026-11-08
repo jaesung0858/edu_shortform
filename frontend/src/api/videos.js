@@ -51,3 +51,12 @@ export async function uploadVideo(file, metadata, thumbnail) {
   const { data } = await httpClient.post('/api/videos', form)
   return data
 }
+
+export async function updateMyVideo(videoId, changes) {
+  const { data } = await httpClient.patch(`/api/videos/${videoId}`, changes)
+  return data
+}
+
+export async function deleteMyVideo(videoId) {
+  await httpClient.delete(`/api/videos/${videoId}`)
+}

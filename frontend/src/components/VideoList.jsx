@@ -46,6 +46,7 @@ export default function VideoList({ showCategories = false, mine = false, keywor
       <div className="category-bar">
         <button
           type="button"
+          className='btn-secondary'
           aria-pressed={categoryId === ''}
           disabled={list.loading}
           onClick={() => selectCategory('')}
@@ -57,6 +58,7 @@ export default function VideoList({ showCategories = false, mine = false, keywor
           <button
             key={category.categoryId}
             type="button"
+            className='btn-secondary'
             disabled={list.loading}
             aria-pressed={categoryId === String(category.categoryId)}
             onClick={() => selectCategory(String(category.categoryId))}
@@ -109,7 +111,7 @@ export default function VideoList({ showCategories = false, mine = false, keywor
         }}>다시 시도</button>
       </div>}
       {!list.loading && !list.error && list.videos.length === 0 && <p>{mine ? '아직 올린 영상이 없습니다.' : '등록된 영상이 없습니다.'}</p>}
-      {list.hasNext && !list.error && <button type="button" disabled={list.loading} onClick={() => {
+      {list.hasNext && !list.error && <button type="button" className='btn-secondary' disabled={list.loading} onClick={() => {
         setList(previous => ({ ...previous, loading: true, error: '' }))
         setPage(value => value + 1)
       }}>더 보기</button>}
